@@ -2,7 +2,7 @@ import logging
 
 from flask import request
 from flask_restplus import Resource
-from app.api.yummy.utilities import create_blog_post, update_post, delete_post
+from app.api.yummy.utilities import create_recipe, update_post, delete_post
 from app.api.yummy.serializers import blog_post, page_of_blog_posts
 from app.api.yummy.parsers import pagination_arguments
 from app.api.restplus import api
@@ -36,7 +36,7 @@ class RecipesCollection(Resource):
         
         """ Creates a recipe """
         
-        create_blog_post(request.json)
+        create_recipe(request.json)
         return None, 201
 
 
