@@ -16,14 +16,8 @@ db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 
 
-# def shell_context():
-#     return dict(app=app, db = db, User = User, Categories = Categories, Recipes = Recipes)
-
-
-# manager.add_command("shell", Shell(make_context=shell_context))
 manager.add_command('db', MigrateCommand)
 
 
 if __name__ == '__main__':
     manager.run()
-    db.create_all()
