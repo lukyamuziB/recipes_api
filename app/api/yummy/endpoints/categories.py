@@ -3,7 +3,7 @@ import logging
 from flask import request
 from flask_restplus import Resource
 from app.api.yummy.utilities import create_category, delete_category, update_category
-from app.api.yummy.serializers import category, category_with_posts
+from app.api.yummy.serializers import category, category_with_recipes
 from ...restplus import api
 from app.models import Categories
 
