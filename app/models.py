@@ -1,5 +1,5 @@
 from . import db
-# from jksfhj import jksfjk
+
 
 class Categories(db.Model):
     __tablename__ = 'categories'
