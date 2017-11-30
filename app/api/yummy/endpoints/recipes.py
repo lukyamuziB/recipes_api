@@ -1,28 +1,28 @@
-import logging
-
 from flask import request
 from flask_restplus import Resource
+
+
 from app.api.yummy.utilities import create_recipe, update_recipe, delete_recipe
-from app.api.yummy.serializers import blog_post, page_of_blog_posts
-from app.api.yummy.parsers import pagination_arguments
+from app.api.yummy.serializers import recipe, recipe_collection
+from app.api.yummy.parsers import pagination_args
 from app.api.restplus import api
 from app.models import Recipes
 
-log = logging.getLogger(__name__)
 
-ns = api.namespace('/recipes', description='Operations on Recipes')
+
+ns = api.namespace('Recipes', description='Operations on Recipes')
 
 
 @ns.route('/')
 class RecipesCollection(Resource):
 
-    @api.expect(pagination_arguments)
-    @api.marshal_with(page_of_blog_posts)
+    @api.expect(pagination_args)
+    @api.marshal_with(recipe_collection)
     def get(self):
         
-        """ Returns paginated list of blog posts. """
+        """ Returns paginated list of Recipes. """
     
-        args = pagination_arguments.parse_args(request)
+        args = pagination_args.parse_args(request)
         page = args.get('page', 1)
         per_page = args.get('per_page', 10)
 
@@ -31,10 +31,10 @@ class RecipesCollection(Resource):
 
         return recipes_page
 
-    @api.expect(blog_post)
+    @api.expect(recipe)
     def post(self):
         
-        """ Creates a recipe """
+        """ Creates a Recipe """
         
         create_recipe(request.json)
         return None, 201
@@ -44,29 +44,29 @@ class RecipesCollection(Resource):
 @api.response(404, 'Recipe not found.')
 class Recipe(Resource):
 
-    @api.marshal_with(blog_post)
+    @api.marshal_with(recipe)
     def get(self, id):
         
         """ Returns a specific Recipe identified by its id. """
 
         return Recipes.query.filter(Recipes.id == id).one()
 
-    @api.expect(blog_post)
+    @api.expect(recipe)
     @api.response(204, 'Recipe successfully updated.')
     def put(self, id):
         
         """" Updates a Recipe. """
         
         data = request.json
-        update_post(id, data)
+        update_recipe(id, data)
         return None, 204
 
     @api.response(204, 'Recipe successfully deleted.')
     def delete(self, id):
         """
-        Deletes blog post.
+        Deletes a Recipe.
         """
-        delete_post(id)
+        delete_recipe(id)
         return None, 204
 
 ''' 

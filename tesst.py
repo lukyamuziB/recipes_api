@@ -2,9 +2,8 @@ from flask import Flask
 from flask_restplus import Api, Resource
 
 app = Flask(__name__)
-api = Api(app, version='1.0', title='Yummy Recipes API',
-    description='Interactive API for Yummy Recipes users', name = "hsdhljh"
-)
+api = Api(app, version='1.0', title='Sample',
+    description='Issa Sample')
 
 @api.route('/my-resource/<id>')
 @api.doc(params={'id': 'An ID'})

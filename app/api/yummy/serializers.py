@@ -1,7 +1,7 @@
 from flask_restplus import fields, Resource
-from ... import api
+from ..restplus import api
 
-recipe = api.model('Blog post', {
+recipe = api.model('Recipe', {
     'id': fields.Integer(readOnly=True, description='recipe unique identifier'),
     'name': fields.String(required=True, description='recipe name'),
     'description': fields.String(required=True, description='A brief description of the recipes'),

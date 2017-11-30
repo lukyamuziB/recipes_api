@@ -2,6 +2,8 @@ import logging
 
 from flask import request
 from flask_restplus import Resource
+
+
 from app.api.yummy.utilities import create_category, delete_category, update_category
 from app.api.yummy.serializers import category, category_with_recipes
 from ...restplus import api
@@ -9,7 +11,7 @@ from app.models import Categories
 
 log = logging.getLogger(__name__)
 
-ns = api.namespace('/categories', description='Operations related to yummy categories')
+ns = api.namespace('Categories', description='Operations related to Recipe Categories')
 
 
 @ns.route('/')
@@ -38,10 +40,10 @@ class CategoryCollection(Resource):
 @api.response(404, 'The Category you are querying does not exist.')
 class CategoryItem(Resource):
 
-    @api.marshal_with(category_with_posts)
+    @api.marshal_with(category_with_recipes)
     def get(self, id):
     
-        """ Returns a category with a list of all Recipes under it. """
+        """ Returns a category with all Recipes associated with it """
         
         return Categories.query.filter(Category.id == id).one()
 
@@ -59,7 +61,7 @@ class CategoryItem(Resource):
     @api.response(204, 'Category successfully deleted.')
     def delete(self, id):
         
-        """ Deletes blog category. """
+        """ Deletes a Recipe Category. """
         
         delete_category(id)
         return None, 204
