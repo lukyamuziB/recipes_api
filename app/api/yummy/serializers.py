@@ -22,3 +22,11 @@ category = api.model('Recipe Category', {
 category_with_recipes = api.inherit('Yummy category with recipes', category, {
     'Recipe': fields.List(fields.Nested(recipe))
 })
+
+
+users = api.model('User', {
+    'name': fields.String(required = True, description = 'Users name'),
+    'username': fields.String(required = True, description = 'User unique name on the app'),
+    'email':fields.String(required = True, description = 'User email'),
+    'password': fields.String(required = True, description = 'user password')
+})
