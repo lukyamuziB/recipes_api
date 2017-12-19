@@ -1,5 +1,3 @@
-import logging
-
 from flask import request
 from flask_restplus import Resource
 
@@ -9,7 +7,6 @@ from app.api.yummy.serializers import category, category_with_recipes
 from ...restplus import api
 from app.models import Categories
 
-log = logging.getLogger(__name__)
 
 ns = api.namespace('Categories', description='Operations related to Recipe Categories')
 

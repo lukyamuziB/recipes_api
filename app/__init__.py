@@ -23,14 +23,13 @@ def create_app(config_name):
     from app.api.restplus import api
     from app.api.yummy.endpoints.recipes import ns as recipes_namespace
     from app.api.yummy.endpoints.categories import ns as categories_namespace
+    from app.api.yummy.endpoints.user import ns as users_namespace
 
     api.init_app(api_blueprint)
     api.add_namespace(recipes_namespace)
     api.add_namespace(categories_namespace)
+    api.add_namespace(users_namespace)
     app.register_blueprint(api_blueprint, url_prefix = '/api')
-
-    # from .auth import auth as auth_blueprint
-    # app.register_blueprint(auth_blueprint, url_prefix = '/auth')
 
 
     return app
