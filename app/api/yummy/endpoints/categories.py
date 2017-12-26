@@ -2,35 +2,47 @@ from flask import request
 from flask_restplus import Resource
 
 
-from app.api.yummy.utilities import create_category, delete_category, update_category
-from app.api.yummy.serializers import category, category_with_recipes
+from app.api.yummy.utilities import create_category,\
+      delete_category, update_category
+from app.api.yummy.serializers import category,\
+ category_with_recipes, category_collection
+from app.api.yummy.parsers import pagination_args 
 from ...restplus import api
 from app.models import Categories
 
 
-ns = api.namespace('Categories', description='Operations related to Recipe Categories')
+ns = api.namespace('Categories', \
+  description='Operations related to Recipe Categories')
 
 
 @ns.route('/')
 class CategoryCollection(Resource):
 
-    @api.marshal_list_with(category)
+    
+    @api.expect(pagination_args)
+    @api.marshal_list_with(category_collection)
     def get(self):
     
-        """ Returns list of categories"""
+        """ Returns a paginated list of categories"""
+        
+        args = pagination_args.parse_args(request)
+        page = args.get('page', 1)
+        per_page = args.get('per_page', 10)
 
-        categories = Categories.query.all()
-        return categories
+        category_query = Categories.query
+        categories_page = category_query.paginate(page, per_page, error_out = False)
+        
+        return categories_page
 
     @api.response(201, 'Category successfully created.')
     @api.expect(category)
     def post(self):
        
         """ Creates a new  category. """
-     
+        user_id = 4
         data = request.json
-        create_category(data)
-        return None, 201
+        create_category(data, user_id)
+        return '{message: Sucessfuly created category}', 201
 
 
 @ns.route('/<int:id>')
@@ -42,7 +54,7 @@ class CategoryItem(Resource):
     
         """ Returns a category with all Recipes associated with it """
         
-        return Categories.query.filter(Category.id == id).one()
+        return Categories.query.filter_by(id = id).first()
 
     @api.expect(category)
     @api.response(204, 'Category successfully updated.')
