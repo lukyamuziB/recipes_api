@@ -8,7 +8,7 @@ def save(data):
 
 
 def check_category_exists(category):
-    ctg = categories.query.filter_by(name = category).first()
+    ctg = Categories.query.filter_by(name = category).first()
     if ctg:
         return False
     return True
@@ -34,8 +34,8 @@ def create_recipe(data, category_id, usr_id):
     category = Categories.query.filter_by(id =category_id).first()
     user = User.query.filter_by(id = usr_id).first()
     if check_recipe_exists(name):
-         recipe = Recipe(name = name, description = description,
-          category = category, user = user)
+         recipe = Recipes(name = name, description = description,
+         category = category, user = user)
          save(recipe)
     else:
         return 0
@@ -64,14 +64,17 @@ def create_category(data, user_id):
 
 
 def update_category(category_id, data):
-    category = Category.query.filter_by(id = category_id).first()
+    category = Categories.query.filter_by(id = category_id).first()
     category.name = data.get('name')
+    category.description = data.get('description')
+    db.session.add(category)
     db.session.commit()
 
 
 def delete_category(category_id):
-    category = Category.query.filter_by(id = category_id)
-    save(category)
+    category = Categories.query.filter_by(id = category_id).first()
+    db.session.delete(category)
+    db.session.commit()
 
 
 def register_user(data):
