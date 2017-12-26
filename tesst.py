@@ -1,26 +1,30 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
-from werkzeug.security import generate_password_hash, check_password_hash
-from flask_migrate import Migrate
-from flask_script import CommandManager
+from werkzeug.security import generate_password_hash,\
+ check_password_hash
+# from flask_migrate import Migrate
+# from flask_script import CommandManager
 
 
 app = Flask(__name__)
 
-app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://ben:4567@localhost/api"
+app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://postgres:7910@localhost/api"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
 
 class User(db.Model):
     __tablename__ = 'users'
-    id = db.Column(db.Integer, primary_key = True, autoincrement = True)
+    id = db.Column(db.Integer, primary_key = True)
     name = db.Column(db.String(50), nullable = False)
-    username = db.Column(db.String(50), nullable = False, unique = True)
+    username = db.Column(db.String(50), nullable = False,
+                         unique = True)
     email = db.Column(db.String(50), nullable = False)
     password = db.Column(db.String(50), nullable = False)
-    recipes = db.relationship('Recipes', backref = 'user', lazy = 'dynamic')
-    categories = db.relationship('Categories', backref = 'user', lazy = 'dynamic')
+    recipes = db.relationship('Recipes', backref = 'user',
+     lazy = 'dynamic')
+    categories = db.relationship('Categories',
+     backref = 'user', lazy = 'dynamic')
 
 
     @property
@@ -55,11 +59,13 @@ class User(db.Model):
 
 class Categories(db.Model):
     __tablename__ = 'categories'
-    id = db.Column( db.Integer, primary_key = True, autoincrement = True)
+    id = db.Column( db.Integer, primary_key = True)
     name = db.Column( db.String(50), unique = True)
     description = db.Column( db.Text)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable = False)
-    recipes = db.relationship('Recipes', backref = 'category', lazy = 'dynamic')
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'),
+     nullable = False)
+    recipes = db.relationship('Recipes', backref = 'category',
+     lazy = 'dynamic')
 
     @staticmethod
     def generate_fake(count=200):
@@ -83,11 +89,13 @@ class Categories(db.Model):
 
 class Recipes(db.Model):
     __tablename__ = 'recipes'
-    id = db.Column(db.Integer, primary_key = True, autoincrement = True)
-    name = db.Column(db.String(50)exit)
+    id = db.Column(db.Integer, primary_key = True)
+    name = db.Column(db.String(50), unique = True)
     description = db.Column(db.Text)
-    category_id = db.Column(db.Integer, db.ForeignKey('categories.id'), nullable = False)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable = False )
+    category_id = db.Column(db.Integer,
+     db.ForeignKey('categories.id'),nullable = False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'),
+     nullable = False )
 
     @staticmethod
     def generate_fake(count=200):
@@ -109,6 +117,3 @@ class Recipes(db.Model):
             db.session.commit()
         except IntegrityError:
             db.session.rollback()
-
-
-    

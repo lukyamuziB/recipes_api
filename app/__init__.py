@@ -17,7 +17,7 @@ def create_app(config_name):
         db.create_all()
 
 
-    """ Register app blueprints api namespaces """
+    """ Register api blue print and namespace"""
     
     from .api import api_v1 as api_blueprint
     from app.api.restplus import api
