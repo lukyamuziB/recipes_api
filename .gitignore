@@ -1,3 +1,8 @@
 data
 __pycache__
 tesst
+env
+.cache/
+.coverage
+.vscode/
+migrations/
