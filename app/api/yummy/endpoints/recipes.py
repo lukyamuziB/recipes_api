@@ -26,8 +26,8 @@ class RecipesCollection(Resource):
         page = args.get('page', 1)
         per_page = args.get('per_page', 10)
 
-        posts_query = Recipes.query
-        recipes_page = posts_query.paginate(page, per_page, error_out=False)
+        recipes_query = Recipes.query
+        recipes_page = recipes_query.paginate(page, per_page, error_out=False)
 
         return recipes_page
 
@@ -35,9 +35,11 @@ class RecipesCollection(Resource):
     def post(self):
         
         """ Creates a Recipe """
-        
-        create_recipe(request.json)
-        return None, 201
+        data = request.json
+        usr_id = 18
+        ctg_id = data.get('category_id')
+        create_recipe(data, ctg_id, usr_id)
+        return '{message: Sucessfuly created Recipe}', 201
 
 
 @ns.route('/<int:id>')
