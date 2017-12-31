@@ -33,24 +33,28 @@ def create_recipe(data, category_id, usr_id):
     description = data.get('description')
     category = Categories.query.filter_by(id =category_id).first()
     user = User.query.filter_by(id = usr_id).first()
-    if check_recipe_exists(name):
+    if check_recipe_exists(name) and category is not None:
          recipe = Recipes(name = name, description = description,
          category = category, user = user)
          save(recipe)
     else:
-        return 0
+        return '{error: Something went wrong}', 404
 
 
 def update_recipe(recipe_id, data):
     recipe = Recipes.query.filter(Recipes.id == recipe_id).first()
-    recipe.name = data.get('name')
-    recipe.description = data.get('description')
+    name = data.get('name')
+    recipe.name = name if name is not None else recipe.name
+    description = data.get('description')
+    recipe.description = description if description is not None else recipe.description
     db.session.commit()
 
 
 def delete_recipe(recipe_id):
-    recipe = Recipes.query.filter(Recipes.id == recipe_id).one()
-    save(recipe)
+    recipe = Recipes.query.filter_by(id = recipe_id).first()
+    db.session.delete(recipe)
+    db.session.commit()
+    # save(recipe)
 
 
 def create_category(data, user_id):
@@ -65,9 +69,10 @@ def create_category(data, user_id):
 
 def update_category(category_id, data):
     category = Categories.query.filter_by(id = category_id).first()
-    category.name = data.get('name')
-    category.description = data.get('description')
-    db.session.add(category)
+    name = data.get('name')
+    category.name = name if name is not None else category.name
+    description = data.get('description')
+    category.description = description if description is not None else category.description
     db.session.commit()
 
 
@@ -80,10 +85,11 @@ def delete_category(category_id):
 def register_user(data):
     name = data.get('name')
     username = data.get('username')
-    email = date.get('email')
-    password = date.get('password')
+    email = data.get('email')
+    password = data.get('password')
     user = User(name = name, username = username, email = email, password = password )
-    db.session.add()
+    db.session.add(user)
+    db.session.commit()
 
 
 def user_login(data):
@@ -92,6 +98,3 @@ def user_login(data):
 
 def user_logout():
     pass
-
-
-
