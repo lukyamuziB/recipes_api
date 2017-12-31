@@ -1,14 +1,15 @@
 from flask_restplus import fields, Resource
 from ..restplus import api
 
+
+""" this file is for data validation """
+
 recipe = api.model('Recipe', {
     'id': fields.Integer(readOnly=True, description='recipe unique identifier'),
     'name': fields.String(required=True, description='recipe name'),
     'description': fields.String(required=True, description='A brief description of the recipes'),
-    # 'recipe steps': fields.String(required = True, descripton = 'Procedure/ Steps of the Recipe'),
-    'category_id': fields.Integer(attribute='categories.id'),
-    'user_id': fields.Integer
-    # 'category': fields.String(attribute='categories.name'),
+    'category_id': fields.Integer(readOnly = True, description = 'category recipe belongs to'),
+    'user_id': fields.Integer(readOnly = True, description = 'User that made recipe')
 })
 
 
@@ -26,7 +27,8 @@ recipe_collection = api.inherit('Recipes Collection', pagination, {
 category = api.model('Recipe Category', {
     'id': fields.Integer(readOnly=True, description='Unqiue category Id for Identity purposes'),
     'name': fields.String(required=True, description='Category name'),
-    'description': fields.String(required = True, description = 'A brief description of the category')
+    'description': fields.String(required = True, description = 'A brief description of the category'),
+    'user_id': fields.Integer(readOnly = True, description='User that made the category')
 })
 
 
@@ -44,4 +46,11 @@ users = api.model('User', {
     'username': fields.String(required = True, description = 'User unique name on the app'),
     'email':fields.String(required = True, description = 'User email'),
     'password': fields.String(required = True, description = 'user password')
+})
+
+
+usr = api.model('user log in', {
+    'username': fields.String(required = True, description = 'User unique name on the app'),
+    'email':fields.String(required = True, description = 'User email')
+  
 })

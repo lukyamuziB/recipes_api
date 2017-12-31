@@ -2,7 +2,8 @@ from flask import request
 from flask_restplus import Resource
 
 
-from app.api.yummy.utilities import create_recipe, update_recipe, delete_recipe
+from app.api.yummy.utilities import create_recipe,\
+       update_recipe, delete_recipe
 from app.api.yummy.serializers import recipe, recipe_collection
 from app.api.yummy.parsers import pagination_args
 from app.api.restplus import api
@@ -20,14 +21,20 @@ class RecipesCollection(Resource):
     @api.marshal_with(recipe_collection)
     def get(self):
         
-        """ Returns paginated list of Recipes. """
+        """ Returns a paginated list of Recipes. """
     
         args = pagination_args.parse_args(request)
+        query = args.get('q')
         page = args.get('page', 1)
         per_page = args.get('per_page', 10)
+        
+        if query is None:
+            recipes_query = Recipes.query
+        else:
+            recipes_query = Recipes.query.filter_by(name = query)    
 
-        recipes_query = Recipes.query
-        recipes_page = recipes_query.paginate(page, per_page, error_out=False)
+        recipes_page = recipes_query.paginate(page,
+              per_page, error_out = False)  
 
         return recipes_page
 
@@ -51,7 +58,7 @@ class Recipe(Resource):
         
         """ Returns a specific Recipe identified by its id. """
 
-        return Recipes.query.filter(Recipes.id == id).one()
+        return Recipes.query.filter(Recipes.id == id).first()
 
     @api.expect(recipe)
     @api.response(204, 'Recipe successfully updated.')
@@ -61,12 +68,13 @@ class Recipe(Resource):
         
         data = request.json
         update_recipe(id, data)
-        return None, 204
+        return '{message: Recipe successfully updated}', 204
 
     @api.response(204, 'Recipe successfully deleted.')
     def delete(self, id):
         """
         Deletes a Recipe.
         """
+
         delete_recipe(id)
-        return None, 204
+        return '{message: Recipe successfully deleted}', 204

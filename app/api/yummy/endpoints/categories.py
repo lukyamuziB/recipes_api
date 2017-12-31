@@ -26,11 +26,17 @@ class CategoryCollection(Resource):
         """ Returns a paginated list of categories"""
         
         args = pagination_args.parse_args(request)
+        query = args.get('q')
         page = args.get('page', 1)
         per_page = args.get('per_page', 10)
 
-        category_query = Categories.query
-        categories_page = category_query.paginate(page, per_page, error_out = False)
+        if query is None:
+            category_query = Categories.query
+        else:
+            category_query = Categories.query.filter_by(name = query) 
+
+        categories_page = category_query.paginate(page, per_page,
+                    error_out = False)
         
         return categories_page
 
@@ -54,7 +60,7 @@ class CategoryItem(Resource):
     
         """ Returns a category with all Recipes associated with it """
         
-        return Categories.query.filter_by(id = id).first()
+        return Categories.query.filter(Categories.id == id).first()
 
     @api.expect(category)
     @api.response(204, 'Category successfully updated.')
@@ -65,7 +71,7 @@ class CategoryItem(Resource):
         """
         data = request.json
         update_category(id, data)
-        return None, 204
+        return '{message: Category sucessfully updated}', 204
 
     @api.response(204, 'Category successfully deleted.')
     def delete(self, id):
