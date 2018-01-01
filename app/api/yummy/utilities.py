@@ -1,5 +1,6 @@
 from app.models import Categories, Recipes, User
 from ... import db
+from sqlalchemy.orm.exc import NoResultFound
 
 
 def save(data):
@@ -28,35 +29,46 @@ def check_user_exists(username, email):
     return False
 
 
+#creates a recipe if it exists
 def create_recipe(data, category_id, usr_id):
     name = data.get('name')
     description = data.get('description')
     category = Categories.query.filter_by(id =category_id).first()
+    if category is None:
+        raise NoResultFound
     user = User.query.filter_by(id = usr_id).first()
     if check_recipe_exists(name) and category is not None:
          recipe = Recipes(name = name, description = description,
          category = category, user = user)
          save(recipe)
     else:
-        return '{error: Something went wrong}', 404
+        raise ValueError
 
 
+#updates a recipe if it exists
 def update_recipe(recipe_id, data):
     recipe = Recipes.query.filter(Recipes.id == recipe_id).first()
-    name = data.get('name')
-    recipe.name = name if name is not None else recipe.name
-    description = data.get('description')
-    recipe.description = description if description is not None else recipe.description
-    db.session.commit()
+    if recipe is None:
+        raise ValueError
+    else:    
+        name = data.get('name')
+        recipe.name = name if name is not None else recipe.name
+        description = data.get('description')
+        recipe.description = description if description is not None else recipe.description
+        db.session.commit()
 
 
+#deletes a recipe if it exists
 def delete_recipe(recipe_id):
     recipe = Recipes.query.filter_by(id = recipe_id).first()
-    db.session.delete(recipe)
-    db.session.commit()
-    # save(recipe)
+    if recipe is None:
+        raise ValueError
+    else:
+        db.session.delete(recipe)
+        db.session.commit()
 
 
+#creates a new category or raises  a value error if category already exists
 def create_category(data, user_id):
     name = data.get('name')
     description = data.get('description')
@@ -65,31 +77,45 @@ def create_category(data, user_id):
         category = Categories(name = name, 
         description = description, user = user)
         save(category)
+    else:
+        raise ValueError
 
 
+#updates a category a user made
 def update_category(category_id, data):
     category = Categories.query.filter_by(id = category_id).first()
-    name = data.get('name')
-    category.name = name if name is not None else category.name
-    description = data.get('description')
-    category.description = description if description is not None else category.description
-    db.session.commit()
+    if category is None:
+        raise ValueError
+    else:
+        name = data.get('name')
+        category.name = name if name is not None else category.name
+        description = data.get('description')
+        category.description = description if description is not None else category.description
+        db.session.commit()
 
 
+#Deletes a category if it exists
 def delete_category(category_id):
     category = Categories.query.filter_by(id = category_id).first()
-    db.session.delete(category)
-    db.session.commit()
+    if category is None:
+        raise ValueError
+    else:
+        db.session.delete(category)
+        db.session.commit()
 
 
+#registers a non existent user
 def register_user(data):
     name = data.get('name')
     username = data.get('username')
     email = data.get('email')
     password = data.get('password')
-    user = User(name = name, username = username, email = email, password = password )
-    db.session.add(user)
-    db.session.commit()
+    if check_user_exists(username, email):
+        user = User(name = name, username = username, email = email, password = password )
+        db.session.add(user)
+        db.session.commit()
+    else:
+        raise ValueError
 
 
 def user_login(data):

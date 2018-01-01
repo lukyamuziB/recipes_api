@@ -41,14 +41,19 @@ class CategoryCollection(Resource):
         return categories_page
 
     @api.response(201, 'Category successfully created.')
+    @api.response(409, 'Conflict, Category already exists')
     @api.expect(category)
     def post(self):
        
         """ Creates a new  category. """
         user_id = 4
         data = request.json
-        create_category(data, user_id)
-        return '{message: Sucessfuly created category}', 201
+        try:
+            create_category(data, user_id)
+            return '{message: Sucessfuly created category}', 201
+        except ValueError as e:
+            return "{Error: You are creating an already existent Category}",409
+
 
 
 @ns.route('/<int:id>')
@@ -70,13 +75,22 @@ class CategoryItem(Resource):
         * Specify the ID of the category to modify in the request URL path.
         """
         data = request.json
-        update_category(id, data)
-        return '{message: Category sucessfully updated}', 204
+        try:
+            update_category(id, data)
+            return '{message: Category successfully updated}', 204
+        except ValueError as e:
+            return "{Error: Can't edit non existent Category}",404
+
 
     @api.response(204, 'Category successfully deleted.')
     def delete(self, id):
         
         """ Deletes a Recipe Category. """
+
+        try:
+            delete_category(id)
+            return "{Successful: Deleted Category}", 204
+        except ValueError as identifier:
+            return "{Error: Can't delete non exixtent Category}",404
         
-        delete_category(id)
-        return None, 204
+

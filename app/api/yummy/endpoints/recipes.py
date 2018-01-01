@@ -1,5 +1,6 @@
 from flask import request
 from flask_restplus import Resource
+from sqlalchemy.orm.exc import NoResultFound
 
 
 from app.api.yummy.utilities import create_recipe,\
@@ -38,6 +39,10 @@ class RecipesCollection(Resource):
 
         return recipes_page
 
+    
+    @api.response(404, 'Category Not found')
+    @api.response(409, 'Conflict, Recipe already exists')
+    @api.response(201, 'Successful, Recipe Created')
     @api.expect(recipe)
     def post(self):
         
@@ -45,8 +50,15 @@ class RecipesCollection(Resource):
         data = request.json
         usr_id = 18
         ctg_id = data.get('category_id')
-        create_recipe(data, ctg_id, usr_id)
-        return '{message: Sucessfuly created Recipe}', 201
+        try:
+            create_recipe(data, ctg_id, usr_id)
+            return '{message: Sucessfuly created Recipe}', 201
+        except ValueError as e:
+            return "{Error: You are creating an already existent Recipe}",409
+        except NoResultFound as e:
+            return "{Error: Recipe can't belong to non existent Category}",404
+
+
 
 
 @ns.route('/<int:id>')
@@ -58,23 +70,32 @@ class Recipe(Resource):
         
         """ Returns a specific Recipe identified by its id. """
 
-        return Recipes.query.filter(Recipes.id == id).first()
+        return Recipes.query.filter_by(id = id).first()
 
+    
     @api.expect(recipe)
     @api.response(204, 'Recipe successfully updated.')
     def put(self, id):
         
-        """" Updates a Recipe. """
-        
+        """ Updates a Recipe. """
+    
         data = request.json
-        update_recipe(id, data)
-        return '{message: Recipe successfully updated}', 204
+        try:
+            update_recipe(id, data)
+            return "{Successful: Recipe successfully updated}", 204
+        except ValueError as e:
+            return "{Error: can't edit a non existent recipe}",404
+
 
     @api.response(204, 'Recipe successfully deleted.')
     def delete(self, id):
         """
         Deletes a Recipe.
         """
+        try:
+            delete_recipe(id)
+            return '{message: Recipe successfully deleted}', 204
+        except ValueError as e:
+            return "{Error: Can't delete non existent Recipe}",404
+            
 
-        delete_recipe(id)
-        return '{message: Recipe successfully deleted}', 204
