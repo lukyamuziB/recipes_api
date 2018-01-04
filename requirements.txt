@@ -10,7 +10,7 @@ coverage==4.0.3
 decorator==4.1.2
 execnet==1.5.0
 Flask==0.12.2
-Flask-JWT==0.3.2
+Flask-JWT-Extended==3.4.0
 Flask-Migrate==2.1.1
 flask-restplus==0.10.1
 Flask-Script==2.0.6

@@ -1,10 +1,11 @@
 from flask import request
 from flask_restplus import Resource
 from sqlalchemy.orm.exc import NoResultFound
+from flask_jwt_extended import jwt_required, get_jwt_identity
 
 
-from app.api.yummy.utilities import create_recipe,\
-       update_recipe, delete_recipe
+from app.api.yummy.utilities import (create_recipe, 
+                                update_recipe, delete_recipe)
 from app.api.yummy.serializers import recipe, recipe_collection
 from app.api.yummy.parsers import pagination_args
 from app.api.restplus import api
@@ -43,12 +44,13 @@ class RecipesCollection(Resource):
     @api.response(404, 'Category Not found')
     @api.response(409, 'Conflict, Recipe already exists')
     @api.response(201, 'Successful, Recipe Created')
+    @jwt_required
     @api.expect(recipe)
     def post(self):
         
         """ Creates a Recipe """
         data = request.json
-        usr_id = 18
+        usr_id = get_jwt_identity
         ctg_id = data.get('category_id')
         try:
             create_recipe(data, ctg_id, usr_id)
@@ -57,7 +59,6 @@ class RecipesCollection(Resource):
             return "{Error: You are creating an already existent Recipe}",409
         except NoResultFound as e:
             return "{Error: Recipe can't belong to non existent Category}",404
-
 
 
 
@@ -74,6 +75,7 @@ class Recipe(Resource):
 
     
     @api.expect(recipe)
+    @jwt_required
     @api.response(204, 'Recipe successfully updated.')
     def put(self, id):
         
@@ -82,16 +84,18 @@ class Recipe(Resource):
         data = request.json
         try:
             update_recipe(id, data)
-            return "{Successful: Recipe successfully updated}", 204
+            return "{Successful: Recipe successfully up'dated}", 204
         except ValueError as e:
             return "{Error: can't edit a non existent recipe}",404
 
 
     @api.response(204, 'Recipe successfully deleted.')
+    @jwt_required
     def delete(self, id):
         """
         Deletes a Recipe.
         """
+
         try:
             delete_recipe(id)
             return '{message: Recipe successfully deleted}', 204

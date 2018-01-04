@@ -1,6 +1,8 @@
 from app.models import Categories, Recipes, User
 from ... import db
 from sqlalchemy.orm.exc import NoResultFound
+from flask_jwt_extended import create_access_token
+from datetime import datetime
 
 
 def save(data):
@@ -25,8 +27,8 @@ def check_recipe_exists(recipe):
 def check_user_exists(username, email):
     if User.query.filter_by(username = username).first() or \
     User.query.filter_by(email = email).first():
-        return True
-    return False
+        return False
+    return True
 
 
 #creates a recipe if it exists
@@ -55,6 +57,7 @@ def update_recipe(recipe_id, data):
         recipe.name = name if name is not None else recipe.name
         description = data.get('description')
         recipe.description = description if description is not None else recipe.description
+        # recipe.modified = datetime.utcnow
         db.session.commit()
 
 
@@ -91,6 +94,7 @@ def update_category(category_id, data):
         category.name = name if name is not None else category.name
         description = data.get('description')
         category.description = description if description is not None else category.description
+        # recipe.modified = datetime.utcnow
         db.session.commit()
 
 
@@ -119,7 +123,23 @@ def register_user(data):
 
 
 def user_login(data):
-    pass
+    username = data.get('username')
+    password = data.get('password')
+    user = User.query.filter_by(username = username).first()
+    if user is None:
+        raise NoResultFound
+    else:
+        if user.verify_password(password):
+            access_token = create_access_token(identity = user.id)
+            return access_token
+        else:
+            raise ValueError
+    return access_token
+    
+        
+
+    
+    
 
 
 def user_logout():

@@ -1,5 +1,6 @@
 from flask import request
 from flask_restplus import Resource
+from flask_jwt_extended import jwt_required
 
 
 from app.api.yummy.utilities import create_category,\
@@ -68,6 +69,7 @@ class CategoryItem(Resource):
         return Categories.query.filter(Categories.id == id).first()
 
     @api.expect(category)
+    @jwt_required
     @api.response(204, 'Category successfully updated.')
     def put(self, id):
         """
@@ -83,6 +85,7 @@ class CategoryItem(Resource):
 
 
     @api.response(204, 'Category successfully deleted.')
+    @jwt_required
     def delete(self, id):
         
         """ Deletes a Recipe Category. """
