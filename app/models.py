@@ -60,8 +60,8 @@ class Categories(db.Model):
                  autoincrement = True)
     name = db.Column( db.String(50), unique = True)
     description = db.Column( db.Text)
-    created = db.Column(db.DateTime(), default=datetime.utcnow)
-    modified = db.Column(db.DateTime(), default=datetime.utcnow)
+    created = db.Column(db.DateTime(), default=datetime.now)
+    modified = db.Column(db.DateTime(), default=datetime.now)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'),
                   nullable = False)
     recipes = db.relationship('Recipes', backref = 'category',
@@ -89,8 +89,8 @@ class Recipes(db.Model):
                      autoincrement = True)
     name = db.Column(db.String(50), unique = True)
     description = db.Column(db.Text)
-    created = db.Column(db.DateTime(), default=datetime.utcnow)
-    modified = db.Column(db.DateTime(), default=datetime.utcnow)
+    created = db.Column(db.DateTime(), default=datetime.now)
+    modified = db.Column(db.DateTime(), default=datetime.now)
     category_id = db.Column(db.Integer, db.ForeignKey('categories.id'),
                         nullable = False)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'),
@@ -113,3 +113,9 @@ class Recipes(db.Model):
                 db.session.commit()
             except IntegrityError:
                 db.session.rollback()
+
+
+class Blacklist(db.Model):
+    __tablename__ = 'blacklist'
+    id = db.Column(db.Integer, primary_key = True)
+    token = db.Column(db.String(150))
