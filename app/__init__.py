@@ -34,6 +34,7 @@ def create_app(config_name):
     api.add_namespace(categories_namespace)
     api.add_namespace(users_namespace)
     app.register_blueprint(api_blueprint, url_prefix = '/api')
+    jwt._set_error_handler_callbacks(api)
 
 
     return app
