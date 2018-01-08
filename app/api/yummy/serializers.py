@@ -47,7 +47,8 @@ category_with_recipes = api.inherit('Yummy category with recipes', category, {
 
 users = api.model('User', {
     'name': fields.String(required = True, description = 'Users name'),
-    'username': fields.String(required = True, description = 'User unique name on the app'),
+    'username': fields.String(required = True,
+       pattern = '^[a-z]+$', description = 'User unique name on the app'),
     'email':fields.String(required = True, description = 'User email'),
     'password': fields.String(required = True, description = 'user password')
 })
@@ -57,4 +58,12 @@ usr = api.model('user log in', {
     'username': fields.String(required = True, description = 'User unique name on the app'),
     'password':fields.String(required = True, description = 'User email')
   
+})
+
+username_reset = api.model('Reset user username', {
+    'username': fields.String(required = True, description = 'User username')
+})
+
+users_password_reset = api.model('Reset Password', {
+    'password': fields.String(required = True, description = 'User Password')
 })
