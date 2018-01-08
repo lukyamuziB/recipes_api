@@ -3,6 +3,8 @@ class Config:
     SECRET_KEY = "d89ryr0989gygVSDGVGYGVGYGAV7W89hgshjvs"
     SQLALCHEMY_COMMIT_ON_TEARDOWN = True
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    JWT_BLACKLIST_ENABLED = True
+    JWT_BLACKLIST_TOKEN_ACCESS = ['access']
 
 
     @staticmethod
