@@ -1,6 +1,7 @@
-from flask import request
+from flask import request, jsonify
 from flask_restplus import Resource
 from sqlalchemy.orm.exc import NoResultFound
+from sqlalchemy import func
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
 
@@ -33,13 +34,15 @@ class RecipesCollection(Resource):
         if query is None:
             recipes_query = Recipes.query
         else:
-            recipes_query = Recipes.query.filter_by(name = query)    
+            recipes_query = Recipes.query.filter_by(name = query)
+            # (func.lower(Recipes.name == query)
 
         recipes_page = recipes_query.paginate(page,
               per_page, error_out = False)  
 
         return recipes_page
 
+    
     
     @api.response(404, 'Category Not found')
     @api.response(409, 'Conflict, Recipe already exists')
@@ -50,18 +53,17 @@ class RecipesCollection(Resource):
         
         """ Creates a Recipe """
         data = request.json
-        usr_id = get_jwt_identity
+        usr_id = get_jwt_identity()
         ctg_id = data.get('category_id')
         try:
             create_recipe(data, ctg_id, usr_id)
-            return '{message: Sucessfuly created Recipe}', 201
+            return jsonify({"Message": "Sucessfuly created Recipe"}), 201
         except ValueError as e:
-            return "{Error: You are creating an already existent Recipe}",409
+            return jsonify({"Error": "You are creating an already existent Recipe"}),409
         except NoResultFound as e:
-            return "{Error: Recipe can't belong to non existent Category}",404
+            return jsonify({"Error": "Recipe can't belong to non existent Category"}),404
 
-
-
+{'message': 'You must be logged in to access this page'}
 @ns.route('/<int:id>')
 @api.response(404, 'Recipe not found.')
 class Recipe(Resource):
@@ -77,6 +79,8 @@ class Recipe(Resource):
     @api.expect(recipe)
     @jwt_required
     @api.response(204, 'Recipe successfully updated.')
+    @api.response(404, 'Recipe does not exit')
+    @api.response(403, 'Forbidden, You dont own this Recipe')
     def put(self, id):
         
         """ Updates a Recipe. """
@@ -84,13 +88,17 @@ class Recipe(Resource):
         data = request.json
         try:
             update_recipe(id, data)
-            return "{Successful: Recipe successfully up'dated}", 204
+            return jsonify({"Message": "Recipe successfully updated"}), 204
         except ValueError as e:
-            return "{Error: can't edit a non existent recipe}",404
+            return sonify({"Error": "Can't edit non existent recipe"}),404
+        except TypeError as e:
+            return jsonify({"Error": "Can't edit a recipe you didnt create"}),403
 
 
-    @api.response(204, 'Recipe successfully deleted.')
     @jwt_required
+    @api.response(200, 'Recipe successfully deleted.')
+    @api.response(404, 'Recipe non existent')
+    @api.response(403, 'Forbidden, You dont own this Recipe')
     def delete(self, id):
         """
         Deletes a Recipe.
@@ -98,8 +106,9 @@ class Recipe(Resource):
 
         try:
             delete_recipe(id)
-            return '{message: Recipe successfully deleted}', 204
+            return jsonify({"Message": "Recipe successfully deleted"}), 200
         except ValueError as e:
-            return "{Error: Can't delete non existent Recipe}",404
+            return jsonify({"Error": "Can't delete non existent Recipe"}),404
+        except TypeError as e:
+            return jsonify({"Error": "Can't delete a recipe you didnt create"}),403
             
-
