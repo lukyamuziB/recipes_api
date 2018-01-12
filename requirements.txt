@@ -3,6 +3,7 @@ aniso8601==1.3.0
 apipkg==1.4
 appnope==0.1.0
 attrs==17.3.0
+blinker==1.4
 certifi==2017.11.5
 chardet==3.0.4
 click==6.7
@@ -11,10 +12,12 @@ decorator==4.1.2
 execnet==1.5.0
 Flask==0.12.2
 Flask-JWT-Extended==3.4.0
+Flask-Mail==0.9.1
 Flask-Migrate==2.1.1
 flask-restplus==0.10.1
 Flask-Script==2.0.6
 Flask-SQLAlchemy==2.3.2
+Flask-Testing==0.7.1
 ForgeryPy==0.1
 idna==2.6
 ipdb==0.10.3
