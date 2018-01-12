@@ -6,6 +6,7 @@ from flask_jwt_extended import ( get_jwt_identity,
     create_access_token, get_raw_jwt)
 from datetime import datetime, timedelta
 from flask import jsonify
+from app.exceptions import ResourceAlreadyExists, YouDontOwnResource
 
 
 def save(data):
@@ -53,16 +54,16 @@ def create_recipe(data, category_id, usr_id):
          category = category, user = user)
          save(recipe)
     else:
-        raise ValueError
+        raise ResourceAlreadyExists
 
 
 #updates a recipe if it exists
 def update_recipe(recipe_id, data):
     recipe = Recipes.query.filter(Recipes.id == recipe_id).first()
     if recipe is None:
-        raise ValueError
+        raise NoResultFound
     elif belongs_to_user() != recipe.user.id:
-        raise TypeError
+        raise YouDontOwnResource
     else:    
         name = data.get('name')
         recipe.name = name if name is not None else recipe.name
@@ -76,9 +77,9 @@ def update_recipe(recipe_id, data):
 def delete_recipe(recipe_id):
     recipe = Recipes.query.filter_by(id = recipe_id).first()
     if recipe is None:
-        raise ValueError
-    elif belongs_to_user != recipe.user.id:
-        raise TypeError    
+        raise NoResultFound
+    elif belongs_to_user() != recipe.user.id:
+        raise YouDontOwnResource  
     else:
         db.session.delete(recipe)
         db.session.commit()
@@ -94,16 +95,16 @@ def create_category(data, user_id):
         description = description, user = user)
         save(category)
     else:
-        raise ValueError
+        raise ResourceAlreadyExists
 
 
 #updates a category a user made
 def update_category(category_id, data):
     category = Categories.query.filter_by(id = category_id).first()
     if category is None:
-        raise ValueError
+        raise NoResultFound
     elif belongs_to_user() != category.user.id:
-        raise TypeError 
+        raise YouDontOwnResource
     else:
         name = data.get('name')
         category.name = name if name is not None else category.name
@@ -117,9 +118,9 @@ def update_category(category_id, data):
 def delete_category(category_id):
     category = Categories.query.filter_by(id = category_id).first()
     if category is None:
-        raise ValueError
-    elif belongs_to_user != category.user.id:
-        raise TypeError 
+        raise NoResultFound
+    elif belongs_to_user() != category.user.id:
+        raise YouDontOwnResource("You didn't create this category")
     else:
         db.session.delete(category)
         db.session.commit()
@@ -135,17 +136,22 @@ def register_user(data):
         user = User(name = name, username = username, email = email, password = password )
         save(user)
     else:
-        raise ValueError
+        raise ResourceAlreadyExists
 
 
 #logs in a registered user and creates a token
 def user_login(data):
     username = data.get('username')
     password = data.get('password')
+    current_user_id = get_jwt_identity()
+    print(current_user_id)
     user = User.query.filter_by(username = username).first()
     if user is None:
         raise NoResultFound
+    elif user.id == current_user_id:
+        raise TypeError
     else:
+        #check user enters their password correctly
         if user.verify_password(password):
             access_token = create_access_token(identity = user.id, expires_delta = timedelta(days=7))
             return access_token
@@ -165,12 +171,17 @@ def user_logout():
 #resets a user's password
 def reset_password(data, id):
     user = User.query.filter_by(id = id).first()
-    password = data.get('password')
-    user.password = password
+    old_password = data.get('old_password')
+    if user.verify_password(old_password):
+        new_password = data.get('new_password')
+        user.password = password
+    else:
+        raise ValueError
+
 
 
 #changes a user's username
-def change_username(date, id):
+def change_username(data, id):
     user = User.query.filter_by(id = id).first()
     username = data.get('username')
     user.username = username
