@@ -4,7 +4,7 @@ from ..restplus import api
 
 """ this file is for data validation """
 
-recipe = api.model('Recipe', {
+recipes = api.model('Recipe', {
     'id': fields.Integer(readOnly=True, description='recipe unique identifier'),
     'name': fields.String(required=True, description='recipe name'),
     'description': fields.String(required=True, description='A brief description of the recipes'),
@@ -14,6 +14,10 @@ recipe = api.model('Recipe', {
     'user_id': fields.Integer(readOnly = True, description = 'User that made recipe')
 })
 
+edit_recipe = api.model('Edit Recipe',{
+    'name': fields.String(required=False, description='Category name'),
+    'description': fields.String(required = False, description = 'A brief description of the category')
+})
 
 pagination = api.model('A page of results', {
     'page': fields.Integer(description='Number of this page of results'),
@@ -23,7 +27,7 @@ pagination = api.model('A page of results', {
 })
 
 recipe_collection = api.inherit('Recipes Collection', pagination, {
-    'items': fields.List(fields.Nested(recipe))})
+    'items': fields.List(fields.Nested(recipes))})
 
 
 category = api.model('Recipe Category', {
@@ -35,13 +39,17 @@ category = api.model('Recipe Category', {
     'user_id': fields.Integer(readOnly = True, description='User that made the category')
 })
 
+edit_category = api.model('Edit category',{
+    'name': fields.String(required=False, description='Category name'),
+    'description': fields.String(required = False, description = 'A brief description of the category')
+})
 
 category_collection = api.inherit('Categories collection', pagination, {
     'items': fields.List(fields.Nested(category))
 })
 
 category_with_recipes = api.inherit('Yummy category with recipes', category, {
-    'Recipe': fields.List(fields.Nested(recipe))
+    'recipes': fields.List(fields.Nested(recipes, required=True))
 })
 
 
@@ -56,14 +64,15 @@ users = api.model('User', {
 
 usr = api.model('user log in', {
     'username': fields.String(required = True, description = 'User unique name on the app'),
-    'password':fields.String(required = True, description = 'User email')
-  
+    'password':fields.String(required = True, description = 'User email') 
 })
 
 username_reset = api.model('Reset user username', {
     'username': fields.String(required = True, description = 'User username')
 })
 
+
 users_password_reset = api.model('Reset Password', {
-    'password': fields.String(required = True, description = 'User Password')
+    'old_password': fields.String(required = True, description = 'User Password'),
+    'new_password': fields.String(required = True, description = 'User Password')
 })
