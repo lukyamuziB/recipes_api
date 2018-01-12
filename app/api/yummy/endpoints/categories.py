@@ -1,12 +1,16 @@
-from flask import request, jsonify
+from flask import request, jsonify, make_response
 from flask_restplus import Resource
 from flask_jwt_extended import jwt_required, get_jwt_identity
+from sqlalchemy.orm.exc import NoResultFound
 
-
-from app.api.yummy.utilities import create_category,\
-      delete_category, update_category
-from app.api.yummy.serializers import category,\
- category_with_recipes, category_collection
+from app.exceptions import ResourceAlreadyExists, YouDontOwnResource
+from app.api.yummy.utilities import (create_category,
+      delete_category, update_category)
+from app.api.yummy.serializers import (category,
+     category_with_recipes, category_collection,
+     edit_category
+)
+ 
 from app.api.yummy.parsers import pagination_args 
 from ...restplus import api
 from app.models import Categories
@@ -16,7 +20,7 @@ ns = api.namespace('categories', \
   description='Operations related to Recipe Categories')
 
 
-@ns.route('/')
+@ns.route('')
 class CategoryCollection(Resource):
 
     
@@ -34,7 +38,7 @@ class CategoryCollection(Resource):
         if query is None:
             category_query = Categories.query
         else:
-            category_query = Categories.query.filter_by(name = query) 
+            category_query = Categories.query.filter(Categories.name.like("%"+query+"%"))
 
         categories_page = category_query.paginate(page, per_page,
                     error_out = False)
@@ -53,9 +57,11 @@ class CategoryCollection(Resource):
         data = request.json
         try:
             create_category(data, user_id)
-            return jsonify({"Message": "Sucessfuly created category"}), 201
-        except ValueError as e:
-            return jsonify({"Error": "You are creating an already existent Category"}),409
+            return make_response(jsonify(
+                    {"Message": "Sucessfuly created category"}), 201)
+        except ResourceAlreadyExists as e:
+            return make_response(jsonify(
+                   {"Error": "You are creating an already existent Category"}),409)
 
 
 
@@ -68,9 +74,9 @@ class CategoryItem(Resource):
     
         """ Returns a category with all Recipes associated with it """
         
-        return Categories.query.filter(Categories.id == id).first()
+        return Categories.query.filter(Categories.id == id).one()
 
-    @api.expect(category)
+    @api.expect(edit_category)
     @jwt_required
     @api.response(204, 'Category successfully updated.')
     @api.response(404, "Not Found, Category doesn't exist")
@@ -86,14 +92,17 @@ class CategoryItem(Resource):
         print("dfhgjdg")
         try:
             update_category(id, data)
-            return jsonify({"Message": "Category successfully updated"}), 200
-        except ValueError as e:
-            return jsonify({"Error": "Can't edit non existent Category"}),404
-        except TypeError as e:
-            return jsonify({"Error": "Can't Edit a Category a you didn't create"}),403
+            return make_response(jsonify(
+                   {"Message": "Category successfully updated"}), 200)
+        except NoResultFound as e:
+            return make_response(jsonify(
+                   {"Error": "Can't edit non existent Category"}),404)
+        except YouDontOwnResource as e:
+            return make_response(jsonify(
+                   {"Error": "Can't Edit a Category a you didn't create"}),403)
 
 
-    @api.response(204, 'Category successfully deleted.')
+    @api.response(200, 'Category successfully deleted.')
     @api.response(404, 'Not Found, Category does not exixt')
     @api.response(403, "Forbidden, You don't own this category")
     @jwt_required
@@ -103,9 +112,12 @@ class CategoryItem(Resource):
 
         try:
             delete_category(id)
-            return jsomnify({"Message": "Deleted Category"}), 200
-        except ValueError as identifier:
-            return jsonify({"Error": "Can't delete non exixtent Category"}),404
-        except TypeError as e:
-            return jsonify({"Error": "Can't delete a recipe a you didn't create"}),403
+            return make_response(jsonify(
+                    {"Message": "Successfully Deleted Category"}),200)
+        except NoResultFound as identifier:
+            return make_response(jsonify(
+                    {'Error': "Can't delete non existent Category"}),404)
+        except YouDontOwnResource as e:
+            return make_response(jsonify(
+                   {'Error': "Can't delete a recipe a you did not create"}),403)
 
