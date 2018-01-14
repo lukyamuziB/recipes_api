@@ -7,12 +7,6 @@ class Config:
     JWT_BLACKLIST_TOKEN_ACCESS = ['access']
     
 
-
-    @staticmethod
-    def init_app(app):
-        pass
-
-
 class DevelopmentConfig(Config):
     RESTPLUS_VALIDATE = True
     DEBUG = True
