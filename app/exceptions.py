@@ -6,3 +6,15 @@ class ResourceAlreadyExists(Exception):
 
 class YouDontOwnResource(Exception):
     pass
+
+class PasswordEmpty(Exception):
+    pass
+
+class UsernameEmpty(Exception):
+    pass 
+
+class EmailEmpty(Exception):
+    pass
+
+class NameEmpty(Exception):
+    pass
