@@ -1,12 +1,18 @@
 from app.models import Categories, Recipes, User, Blacklist
 from ... import jwt
 from ... import db
+from app.validators import validate_username, validate_email, validate_password
 from sqlalchemy.orm.exc import NoResultFound
 from flask_jwt_extended import ( get_jwt_identity,
     create_access_token, get_raw_jwt)
 from datetime import datetime, timedelta
 from flask import jsonify
-from app.exceptions import ResourceAlreadyExists, YouDontOwnResource
+from app.exceptions import (
+    ResourceAlreadyExists, YouDontOwnResource,
+    EmailEmpty, PasswordEmpty, UsernameEmpty, NameEmpty,
+    EmptyField, EmptyDescription, WrongPassword,
+    PasswordFormatError, EmailFormatError, UsernameFormatError
+   )
 
 
 def save(data):
@@ -14,15 +20,23 @@ def save(data):
     db.session.commit()
 
 
-def check_category_exists(category):
-    ctg = Categories.query.filter_by(name = category).first()
+def belongs_to_user():
+    """ picks currently logged in user id """
+    usr_id = get_jwt_identity()
+    return usr_id
+
+
+def check_category_exists(category, user_id):
+    ctg = Categories.query.filter_by(
+           user_id = user_id, name = category).first()
     if ctg:
         return False
     return True
 
 
-def check_recipe_exists(recipe):
-    rcp = Recipes.query.filter_by(name = recipe).first()
+def check_recipe_exists(recipe, user_id):
+    rcp = Recipes.query.filter_by(
+          name = recipe, user_id = user_id).first()
     if rcp:
         return False
     return True
@@ -35,21 +49,19 @@ def check_user_exists(username, email):
     return True
 
 
-#picks user id from the token
-def belongs_to_user():
-    usr_id = get_jwt_identity()
-    return usr_id
-
-
-#creates a recipe if it exists
 def create_recipe(data, category_id, usr_id):
+    """creates a recipe if doesn't exisr exists
+       will throw a NoResult exception if the category you choose
+       does not exist
+    """
     name = data.get('name')
     description = data.get('description')
-    category = Categories.query.filter_by(id =category_id).first()
+    category = Categories.query.filter_by(
+        id =category_id, user_id = usr_id).first()
     if category is None:
         raise NoResultFound
     user = User.query.filter_by(id = usr_id).first()
-    if check_recipe_exists(name) and category is not None:
+    if check_recipe_exists(name, usr_id):
          recipe = Recipes(name = name, description = description,
          category = category, user = user)
          save(recipe)
@@ -57,40 +69,48 @@ def create_recipe(data, category_id, usr_id):
         raise ResourceAlreadyExists
 
 
-#updates a recipe if it exists
 def update_recipe(recipe_id, data):
+    """ updates a recipe if it exists """
     recipe = Recipes.query.filter(Recipes.id == recipe_id).first()
     if recipe is None:
         raise NoResultFound
-    elif belongs_to_user() != recipe.user.id:
-        raise YouDontOwnResource
     else:    
         name = data.get('name')
-        recipe.name = name if name is not None else recipe.name
         description = data.get('description')
-        recipe.description = description if description is not None else recipe.description
+        if name is not None:
+            if len(name) == 0:
+                raise EmptyField
+            else:
+                recipe.name = name
+        else:
+             recipe.name = recipe.name
+        if description is not None:
+            if len(description) == 0:
+                raise EmptyDescription
+            else:
+                recipe.description = description
+        else:
+            recipe.description = recipe.description
         recipe.modified = datetime.now()
         db.session.commit()
 
 
-#deletes a recipe if it exists
-def delete_recipe(recipe_id):
-    recipe = Recipes.query.filter_by(id = recipe_id).first()
+def delete_recipe(recipe_id, user_id):
+    """ deletes a recipe if it exists """
+    recipe = Recipes.query.filter_by(id = recipe_id, user_id = user_id).first()
     if recipe is None:
-        raise NoResultFound
-    elif belongs_to_user() != recipe.user.id:
-        raise YouDontOwnResource  
+        raise NoResultFound  
     else:
         db.session.delete(recipe)
         db.session.commit()
 
 
-#creates a new category if it doesn't exist yet
 def create_category(data, user_id):
+    """ creates a new category if it doesn't exist yet """
     name = data.get('name')
     description = data.get('description')
     user = User.query.filter_by(id = user_id).first()
-    if check_category_exists(name):
+    if check_category_exists(name, user_id):
         category = Categories(name = name, 
         description = description, user = user)
         save(category)
@@ -98,40 +118,66 @@ def create_category(data, user_id):
         raise ResourceAlreadyExists
 
 
-#updates a category a user made
 def update_category(category_id, data):
+    """ updates a category a user made """
     category = Categories.query.filter_by(id = category_id).first()
     if category is None:
         raise NoResultFound
-    elif belongs_to_user() != category.user.id:
-        raise YouDontOwnResource
     else:
-        name = data.get('name')
-        category.name = name if name is not None else category.name
         description = data.get('description')
-        category.description = description if description is not None else category.description
+        name = data.get('name')
+        if name is not None:
+            if len(name) == 0:
+                raise EmptyField
+            else:
+                category.name = name
+        else:
+            category.name = category.name
+        if description is not None:
+            if len(description) == 0:
+                raise EmptyDescription
+            else: 
+                category.description = description
+        else:
+            category.description = category.description
         category.modified = datetime.now()
         db.session.commit()
 
 
-#Deletes a category if it exists
-def delete_category(category_id):
-    category = Categories.query.filter_by(id = category_id).first()
+def delete_category(category_id, user_id):
+    """ Deletes a category if it exists """
+    category = Categories.query.filter_by(id = category_id, user_id = user_id ).first()
     if category is None:
         raise NoResultFound
-    elif belongs_to_user() != category.user.id:
-        raise YouDontOwnResource("You didn't create this category")
     else:
         db.session.delete(category)
         db.session.commit()
 
 
-#registers a non existent user
 def register_user(data):
-    name = data.get('name')
-    username = data.get('username')
-    email = data.get('email')
+    """ registers a non existent user """
+    name = data.get('name').strip()
+    username = data.get('username').strip()
+    email = data.get('email').strip()
     password = data.get('password')
+    if len(name) == 0:
+        raise NameEmpty
+    if len(username) == 0:
+        raise UsernameEmpty
+    else:
+        if not validate_username(username):
+            raise UsernameFormatError
+    if len(password) == 0:
+        raise PasswordEmpty
+    else:
+        if not validate_password(password):
+            raise PasswordFormatError
+    if len(email) == 0:
+        raise EmailEmpty
+    else:
+        if not validate_email(email):
+            raise EmailFormatError
+    
     if check_user_exists(username, email):
         user = User(name = name, username = username, email = email, password = password )
         save(user)
@@ -139,37 +185,37 @@ def register_user(data):
         raise ResourceAlreadyExists
 
 
-#logs in a registered user and creates a token
 def user_login(data):
+    """ logs in a registered user and creates a token """
     username = data.get('username')
+    if len(username) == 0:
+        raise UsernameEmpty
     password = data.get('password')
-    current_user_id = get_jwt_identity()
-    print(current_user_id)
     user = User.query.filter_by(username = username).first()
     if user is None:
         raise NoResultFound
-    elif user.id == current_user_id:
-        raise TypeError
+    elif len(password) == 0:
+        raise PasswordEmpty
     else:
         #check user enters their password correctly
         if user.verify_password(password):
             access_token = create_access_token(identity = user.id, expires_delta = timedelta(days=7))
             return access_token
         else:
-            raise ValueError
+            raise WrongPassword
     return access_token
     
 
-#blackklists a token
 def user_logout():
+    """ blackklists a token """
     jti = get_raw_jwt()['jti']
     blacklist = Blacklist(token = jti)
     db.session.add(blacklist)
     db.session.commit()
 
 
-#resets a user's password
 def reset_password(data, id):
+    """ resets a user's password """
     user = User.query.filter_by(id = id).first()
     old_password = data.get('old_password')
     if user.verify_password(old_password):
@@ -179,9 +225,8 @@ def reset_password(data, id):
         raise ValueError
 
 
-
-#changes a user's username
 def change_username(data, id):
+    """ changes a user's username """
     user = User.query.filter_by(id = id).first()
     username = data.get('username')
     user.username = username
