@@ -22,7 +22,7 @@ class TestUserAuth(BaseTestCase):
             "name":"ben",
             "username":"lukya",
             "email":"lukyamuzibenon@gmail.com",
-            "password":"1000"
+            "password":"1000kjkjkj"
         }
         response = self.app.post("/api/auth/register",
          data=json.dumps(user_data), content_type="application/json")
@@ -69,11 +69,73 @@ class TestUserAuth(BaseTestCase):
         self.assertEqual(msg["Error"],"Wrong Password")
         self.assertEqual(response.status_code, 404)
     
-    # def test_user_can_log_out(self):
-    #     response = self.app.delete("/api/auth/logout")
-    #     msg = json.loads(response.data)
-    #     self.assertEqual(msg["Message"],"Successfully loged out")
-    #     self.assertEqual(response.status_code, 200)
+    def test_user_has_to_provide_password(self):
+        """tests that a user can't attempt to login with empty password"""
+        user_data = {
+            
+            "username":"lukya",
+            "password":""
+        }
+        response = self.app.post("/api/auth/login",
+         data=json.dumps(user_data), content_type="application/json")
+        msg = json.loads(response.data)
+        self.assertEqual(msg["Error"],"Provide your password to login")
+        self.assertEqual(response.status_code, 400)
+    
+    def test_user_has_to_provide_username(self):
+        """tests that a user can't attempt to login with empty username"""
+        user_data = {
+            
+            "username":"",
+            "password":"1000uuuu"
+        }
+        response = self.app.post("/api/auth/login",
+         data=json.dumps(user_data), content_type="application/json")
+        msg = json.loads(response.data)
+        self.assertEqual(msg["Error"],"Provide your username to login")
+        self.assertEqual(response.status_code, 400)
+    
+    def test_wrong_email_format(self):
+        user_data = {
+            "name":"ben",
+            "username":"lukya",
+            "email":"lukya",
+            "password":"1000kjkjkj"
+        }
+        response = self.app.post("/api/auth/register",
+         data=json.dumps(user_data), content_type="application/json")
+        msg = json.loads(response.data)
+        self.assertEqual(msg["Error"],"Enter your Email in the correct format")
+        self.assertEqual(response.status_code, 400)
+    
+    def test_wrong_username_format(self):
+        user_data = {
+            "name":"ben",
+            "username":"__+&*&",
+            "email":"lukya",
+            "password":"1000kjkjkj"
+        }
+        response = self.app.post("/api/auth/register",
+         data=json.dumps(user_data), content_type="application/json")
+        msg = json.loads(response.data)
+        self.assertEqual(msg["Error"],"Make sure your username is only alphanumeric")
+        self.assertEqual(response.status_code, 400)
+    
+    def test_short_password(self):
+        user_data = {
+            "name":"benon",
+            "username":"lukyamuzi",
+            "email":"lukya@gmail.com",
+            "password":"10"
+        }
+        response = self.app.post("/api/auth/register",
+         data=json.dumps(user_data), content_type="application/json")
+        msg = json.loads(response.data)
+        self.assertEqual(msg["Error"],"Make sure your password is at least 6 alphanumeric characters")
+        self.assertEqual(response.status_code, 400)
 
 
 
+
+
+        
