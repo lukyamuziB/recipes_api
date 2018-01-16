@@ -19,11 +19,11 @@ class User(db.Model):
     email = db.Column(db.String(50), nullable = False)
     password_hash = db.Column(db.String(128))
     recipes = db.relationship('Recipes', backref = 'user',
-                  lazy = 'dynamic')
+                  lazy = 'dynamic', cascade = "all, delete-orphan")
     categories = db.relationship('Categories', backref = 'user',
-                    lazy = 'dynamic')
+                    lazy = 'dynamic', cascade = "all, delete-orphan")
 
-    """makes the password colum impossible to querry """
+    #makes the password colum impossible to querry
     @property
     def password(self):
         raise AttributeError('password is not a readable attribute')
@@ -35,9 +35,10 @@ class User(db.Model):
     def verify_password(self, password):
         return check_password_hash(self.password_hash, password)
 
-    """ generates fake users for testing the API at a large scale"""
+    
     @staticmethod
     def data_generator(count=200):
+        """ generates fake users for testing the API at a large scale"""
         seed()
         # num = User.query.count()
         for i in range(count):
@@ -58,17 +59,18 @@ class Categories(db.Model):
     __tablename__ = 'categories'
     id = db.Column( db.Integer, primary_key = True,
                  autoincrement = True)
-    name = db.Column( db.String(50), unique = True)
+    name = db.Column( db.String(50))
     description = db.Column( db.Text)
     created = db.Column(db.DateTime(), default=datetime.now)
     modified = db.Column(db.DateTime(), default=datetime.now)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'),
                   nullable = False)
     recipes = db.relationship('Recipes', backref = 'category',
-                   lazy = 'dynamic')
+                   lazy = 'dynamic', cascade = "all, delete-orphan")
 
     @staticmethod
     def data_generator(count=200):
+        """ generates fake Categories for testing API """
         seed()
         num = User.query.count()
         for i in range(count):
@@ -87,7 +89,7 @@ class Recipes(db.Model):
     __tablename__ = 'recipes'
     id = db.Column(db.Integer, primary_key = True,
                      autoincrement = True)
-    name = db.Column(db.String(50), unique = True)
+    name = db.Column(db.String(50))
     description = db.Column(db.Text)
     created = db.Column(db.DateTime(), default=datetime.now)
     modified = db.Column(db.DateTime(), default=datetime.now)
@@ -96,9 +98,10 @@ class Recipes(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'),
                          nullable = False )
     
-    """ generates fake recipes for testing API """
+    
     @staticmethod
     def data_generator(count=200):
+        """ generates fake recipes for testing API """
         seed()
         user_num = User.query.count()
         cat_num = Categories.query.count()
