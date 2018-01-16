@@ -1,5 +1,5 @@
 from flask import request, jsonify, make_response
-from flask_restplus import Resource
+from flask_restplus import Resource, marshal
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy import func
 from flask_jwt_extended import jwt_required, get_jwt_identity
@@ -19,29 +19,36 @@ ns = api.namespace('recipes', description='Operations on Recipes')
 
 @ns.route('')
 class RecipesCollection(Resource):
-
+    
+    @jwt_required
     @api.expect(pagination_args)
-    @api.marshal_with(recipe_collection)
+    # @api.marshal_with(recipe_collection)
     def get(self):
         
         """ Returns a paginated list of Recipes. """
-    
+        
+        user_id = get_jwt_identity()
         args = pagination_args.parse_args(request)
         query = args.get('q')
         page = args.get('page', 1)
         per_page = args.get('per_page', 10)
-        
+        user_id =get_jwt_identity()
         if query is None:
-            recipes_query = Recipes.query
+            recipes_query = Recipes.query.filter_by(user_id = user_id)
         else:
             recipes_query = Recipes.query.filter(
-                            Recipes.name.like("%"+query+"%"))
+                            Recipes.name.ilike(
+                                "%"+query+"%"), Recipes.user_id == user_id)
         recipes_page = recipes_query.paginate(page,
-              per_page, error_out = False)  
+              per_page, error_out = False) 
 
-        return recipes_page
+        if not recipes_page.items:
+            return make_response(jsonify(
+        {"Error":f"Page {page} doesn't have any recipes yet"}),400)
+        else:
+            return marshal(recipes_page, recipe_collection)
 
-    
+
     
     @api.response(404, 'Category Not found')
     @api.response(409, 'Conflict, Recipe already exists')
@@ -65,18 +72,23 @@ class RecipesCollection(Resource):
             return make_response(jsonify(
             {"Error": "Recipe can't belong to non existent Category"}),404)
 
-{'message': 'You must be logged in to access this page'}
+
 @ns.route('/<int:id>')
 @api.response(404, 'Recipe not found.')
 class Recipe(Resource):
-
-    @api.marshal_with(recipes)
+    
+    @jwt_required
     def get(self, id):
         
         """ Returns a specific Recipe identified by its id. """
-
-        return Recipes.query.filter_by(id = id).first()
-
+        user_id = get_jwt_identity()
+        response = Recipes.query.filter_by(
+             id = id, user_id = user_id).first()
+        if response is None:
+            return make_response(jsonify(
+                   {"Error": "We didnt find any Recipe\
+                    coresponding to the id you provided"}), 400)
+        return marshal(response, recipes)
     
     @api.expect(edit_recipe)
     @jwt_required
@@ -108,8 +120,9 @@ class Recipe(Resource):
         """
         Deletes a Recipe.
         """
+        user_id = get_jwt_identity()
         try:
-            delete_recipe(id)
+            delete_recipe(id, user_id)
             return make_response(jsonify(
                    {"Message": "Recipe successfully deleted"}), 200)
         except NoResultFound:
