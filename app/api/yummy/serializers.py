@@ -56,7 +56,7 @@ category_with_recipes = api.inherit('Yummy category with recipes', category, {
 users = api.model('User', {
     'name': fields.String(required = True, description = 'Users name'),
     'username': fields.String(required = True,
-       pattern = '^[a-z]+$', description = 'User unique name on the app'),
+       description = 'User unique name on the app'),
     'email':fields.String(required = True, description = 'User email'),
     'password': fields.String(required = True, description = 'user password')
 })

@@ -1,9 +1,9 @@
 from flask import request, jsonify, make_response
-from flask_restplus import Resource
+from flask_restplus import Resource, marshal
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from sqlalchemy.orm.exc import NoResultFound
 
-from app.exceptions import ResourceAlreadyExists, YouDontOwnResource
+from app.exceptions import ResourceAlreadyExists, EmptyField, EmptyDescription
 from app.api.yummy.utilities import (create_category,
       delete_category, update_category)
 from app.api.yummy.serializers import (category,
@@ -23,9 +23,9 @@ ns = api.namespace('categories', \
 @ns.route('')
 class CategoryCollection(Resource):
 
-    
+    @jwt_required
     @api.expect(pagination_args)
-    @api.marshal_list_with(category_collection)
+    # @api.marshal_list_with(category_collection)
     def get(self):
     
         """ Returns a paginated list of categories"""
@@ -34,16 +34,23 @@ class CategoryCollection(Resource):
         query = args.get('q')
         page = args.get('page', 1)
         per_page = args.get('per_page', 10)
+        user_id = get_jwt_identity()
+
 
         if query is None:
-            category_query = Categories.query
+            category_query = Categories.query.filter_by(user_id = user_id)
         else:
-            category_query = Categories.query.filter(Categories.name.like("%"+query+"%"))
+            category_query = Categories.query.filter(
+                Categories.name.ilike("%"+query+"%"), Categories.user_id == user_id)
 
         categories_page = category_query.paginate(page, per_page,
                     error_out = False)
         
-        return categories_page
+        if not categories_page.items:
+            return make_response(jsonify(
+        {"Error":f"This page doesn't have any categories yet"}))
+        else:
+            return marshal(categories_page, category_collection)
 
     @api.response(201, 'Category successfully created.')
     @api.response(409, 'Conflict, Category already exists')
@@ -59,7 +66,7 @@ class CategoryCollection(Resource):
             create_category(data, user_id)
             return make_response(jsonify(
                     {"Message": "Sucessfuly created category"}), 201)
-        except ResourceAlreadyExists as e:
+        except ResourceAlreadyExists:
             return make_response(jsonify(
                    {"Error": "You are creating an already existent Category"}),409)
 
@@ -68,19 +75,26 @@ class CategoryCollection(Resource):
 @ns.route('/<int:id>')
 @api.response(404, 'The Category you are querying does not exist.')
 class CategoryItem(Resource):
-
-    @api.marshal_with(category_with_recipes)
+    
+    @jwt_required
     def get(self, id):
     
         """ Returns a category with all Recipes associated with it """
-        
-        return Categories.query.filter(Categories.id == id).one()
+        user_id = get_jwt_identity()
+        response = Categories.query.filter_by( 
+            id = id, user_id = user_id).first()
+        if response is None:
+            print("reaching here")
+            return make_response(jsonify(
+                   {"Error": "We didnt find any category coresponding to the id you provided"}), 400)
+        return marshal(response, category_with_recipes)
+
 
     @api.expect(edit_category)
     @jwt_required
     @api.response(204, 'Category successfully updated.')
     @api.response(404, "Not Found, Category doesn't exist")
-    @api.response(403, "Forbidden, You don't own this category")
+    @api.response(400, "Bad Request.")
     def put(self, id):
         """
         * Updates a category in the Yummy recipes database
@@ -88,8 +102,6 @@ class CategoryItem(Resource):
         """
         data = request.json
         a = get_jwt_identity()
-        print(a)
-        print("dfhgjdg")
         try:
             update_category(id, data)
             return make_response(jsonify(
@@ -97,9 +109,12 @@ class CategoryItem(Resource):
         except NoResultFound as e:
             return make_response(jsonify(
                    {"Error": "Can't edit non existent Category"}),404)
-        except YouDontOwnResource as e:
+        except EmptyField:
             return make_response(jsonify(
-                   {"Error": "Can't Edit a Category a you didn't create"}),403)
+                   {"Error": "Category name field cant be left empty"}),400)
+        except EmptyDescription:
+            return make_response(jsonify(
+            {"Error": "Category description field cant be left empty"}),400)
 
 
     @api.response(200, 'Category successfully deleted.')
@@ -109,9 +124,9 @@ class CategoryItem(Resource):
     def delete(self, id):
         
         """ Deletes a Recipe Category. """
-
+        user_id = get_jwt_identity()
         try:
-            delete_category(id)
+            delete_category(id, user_id)
             return make_response(jsonify(
                     {"Message": "Successfully Deleted Category"}),200)
         except NoResultFound as identifier:
