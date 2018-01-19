@@ -4,6 +4,7 @@
 <a href="https://www.python.org/dev/peps/pep-0008/">
 <img class="notice-badge" src="https://img.shields.io/badge/code%20style-pep8-orange.svg" alt="Badge"/>
 </a>
+<a href="https://codeclimate.com/github/lukyamuziB/recipes_api/maintainability"><img src="https://api.codeclimate.com/v1/badges/6b7adbe8b14e0a8b6642/maintainability" /></a>
 
 # RecipeAPI
 
