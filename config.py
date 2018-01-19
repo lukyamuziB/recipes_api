@@ -10,14 +10,14 @@ class Config:
 class DevelopmentConfig(Config):
     RESTPLUS_VALIDATE = True
     DEBUG = True
-    SQLALCHEMY_DATABASE_URI = "postgresql://postgres:7910@localhost/api"
+    SQLALCHEMY_DATABASE_URI = "postgresql://localhost/api"
 
 
 class TestingConfig(Config):
     RESTPLUS_VALIDATE = False
     DEBUG = False
     TESTING = True
-    SQLALCHEMY_DATABASE_URI = "postgresql://postgres:7910@localhost/test_api"
+    SQLALCHEMY_DATABASE_URI = "postgresql://localhost/test_api"
     
 
 class ProductionConfig(Config):

@@ -18,7 +18,8 @@ def internal_server_error(e):
 
 @api_v1.app_errorhandler(405)
 def method_not_allowed(e):
-    return make_response(jsonify({'Error':"Request URL does not suppor this method "}),405)
+    return make_response(jsonify(
+    {'Error':"Request URL does not suppor this method "}),405)
 
 @api_v1.app_errorhandler(400)
 def bad_request(e):

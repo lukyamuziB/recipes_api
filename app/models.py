@@ -1,9 +1,12 @@
+#third party imports
 from werkzeug.security import generate_password_hash, \
            check_password_hash
 from random import seed, randint
 from datetime import datetime
 import forgery_py
 from sqlalchemy.exc import IntegrityError
+
+#local imports
 from . import db
 
 
@@ -23,7 +26,7 @@ class User(db.Model):
     categories = db.relationship('Categories', backref = 'user',
                     lazy = 'dynamic', cascade = "all, delete-orphan")
 
-    #makes the password colum impossible to querry
+    #makes the password column impossible to querry
     @property
     def password(self):
         raise AttributeError('password is not a readable attribute')
