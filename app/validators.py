@@ -6,12 +6,14 @@ def validate_username(username):
         return True
     return False
 
+
 def validate_email(email):
     email_pattern = re.compile(
         r'(^[a-zA-Z0-9_.]+@[a-zA-Z0-9]+\.[a-zA-Z0-9.]+$)')
     if email_pattern.match(email):
         return True
     return False
+
 
 def validate_password(password):
     password_pattern = re.compile(r'^\w{6,25}$')
