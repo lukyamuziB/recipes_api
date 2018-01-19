@@ -4,15 +4,13 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from sqlalchemy.orm.exc import NoResultFound
 
 from app.exceptions import ResourceAlreadyExists, EmptyField, EmptyDescription
-from app.api.yummy.utilities import (create_category,
+from app.api.utilities import (create_category,
       delete_category, update_category)
-from app.api.yummy.serializers import (category,
+from app.api.serializers import (category,
      category_with_recipes, category_collection,
-     edit_category
-)
- 
-from app.api.yummy.parsers import pagination_args 
-from ...restplus import api
+     edit_category)
+from app.api.parsers import pagination_args 
+from app.api.restplus import api
 from app.models import Categories
 
 
@@ -25,7 +23,6 @@ class CategoryCollection(Resource):
 
     @jwt_required
     @api.expect(pagination_args)
-    # @api.marshal_list_with(category_collection)
     def get(self):
     
         """ Returns a paginated list of categories"""
@@ -69,7 +66,6 @@ class CategoryCollection(Resource):
         except ResourceAlreadyExists:
             return make_response(jsonify(
                    {"Error": "You are creating an already existent Category"}),409)
-
 
 
 @ns.route('/<int:id>')
@@ -135,4 +131,3 @@ class CategoryItem(Resource):
         except YouDontOwnResource as e:
             return make_response(jsonify(
                    {'Error': "Can't delete a recipe a you did not create"}),403)
-

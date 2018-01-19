@@ -1,12 +1,16 @@
-from app.models import Categories, Recipes, User, Blacklist
-from ... import jwt
-from ... import db
-from app.validators import validate_username, validate_email, validate_password
+#third party imports 
+from datetime import datetime, timedelta
+from flask import jsonify
 from sqlalchemy.orm.exc import NoResultFound
 from flask_jwt_extended import ( get_jwt_identity,
     create_access_token, get_raw_jwt)
-from datetime import datetime, timedelta
-from flask import jsonify
+
+#local imports
+from app.models import Categories, Recipes, User, Blacklist
+from .. import jwt
+from .. import db
+from app.validators import (validate_username,
+                   validate_email, validate_password)
 from app.exceptions import (
     ResourceAlreadyExists, YouDontOwnResource,
     EmailEmpty, PasswordEmpty, UsernameEmpty, NameEmpty,
@@ -97,7 +101,8 @@ def update_recipe(recipe_id, data):
 
 def delete_recipe(recipe_id, user_id):
     """ deletes a recipe if it exists """
-    recipe = Recipes.query.filter_by(id = recipe_id, user_id = user_id).first()
+    recipe = Recipes.query.filter_by(id = recipe_id,
+                          user_id = user_id).first()
     if recipe is None:
         raise NoResultFound  
     else:
@@ -179,7 +184,8 @@ def register_user(data):
             raise EmailFormatError
     
     if check_user_exists(username, email):
-        user = User(name = name, username = username, email = email, password = password )
+        user = User(name = name, username = username,
+                email = email, password = password )
         save(user)
     else:
         raise ResourceAlreadyExists
@@ -199,7 +205,8 @@ def user_login(data):
     else:
         #check user enters their password correctly
         if user.verify_password(password):
-            access_token = create_access_token(identity = user.id, expires_delta = timedelta(days=7))
+            access_token = create_access_token(identity = user.id,
+                 expires_delta = timedelta(days=7))
             return access_token
         else:
             raise WrongPassword

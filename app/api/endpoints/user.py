@@ -2,7 +2,6 @@
 from flask import request, jsonify, make_response
 from flask_restplus import Resource
 from sqlalchemy.orm.exc import NoResultFound
-
 from flask_jwt_extended import (
     jwt_required, get_jwt_identity, jwt_optional
 )
@@ -15,17 +14,17 @@ from app.exceptions import (
     WrongPassword, UsernameEmpty,PasswordFormatError,
      EmailFormatError, UsernameFormatError
    )
-from app.api.yummy.utilities import (
+from app.api.utilities import (
     register_user, user_login, user_logout,
     reset_password, change_username 
 )
-from app.api.yummy.serializers import (
+from app.api.serializers import (
     users, usr,
     users_password_reset, username_reset
 )
-
-from ...restplus import api
+from app.api.restplus import api
 from app.models import User
+
 
 ns = api.namespace('auth', description='Operations on User Authentication')
 
@@ -69,8 +68,7 @@ class UserRegistration(Resource):
             return make_response(jsonify(
                   {"Error": "Enter your Email in the correct format"}), 400)
         
-
-                  
+               
 @ns.route('/login')
 class UserLogin(Resource):
     
@@ -98,9 +96,6 @@ class UserLogin(Resource):
         except UsernameEmpty:
             return make_response(jsonify(
               {'Error': 'Provide your username to login'}),400)
-            
-
-
 
 
 @ns.route('/change_password')

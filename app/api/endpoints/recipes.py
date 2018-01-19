@@ -1,3 +1,4 @@
+#third party imports
 from flask import request, jsonify, make_response
 from flask_restplus import Resource, marshal
 from sqlalchemy.orm.exc import NoResultFound
@@ -5,11 +6,12 @@ from sqlalchemy import func
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from app.exceptions import ResourceAlreadyExists, YouDontOwnResource
 
-from app.api.yummy.utilities import (create_recipe, 
+#local imports
+from app.api.utilities import (create_recipe, 
                                 update_recipe, delete_recipe)
-from app.api.yummy.serializers import (recipes,
+from app.api.serializers import (recipes,
     recipe_collection, edit_recipe)
-from app.api.yummy.parsers import pagination_args
+from app.api.parsers import pagination_args
 from app.api.restplus import api
 from app.models import Recipes
 
@@ -22,7 +24,6 @@ class RecipesCollection(Resource):
     
     @jwt_required
     @api.expect(pagination_args)
-    # @api.marshal_with(recipe_collection)
     def get(self):
         
         """ Returns a paginated list of Recipes. """
@@ -49,7 +50,6 @@ class RecipesCollection(Resource):
             return marshal(recipes_page, recipe_collection)
 
 
-    
     @api.response(404, 'Category Not found')
     @api.response(409, 'Conflict, Recipe already exists')
     @api.response(201, 'Successful, Recipe Created')
@@ -79,7 +79,6 @@ class Recipe(Resource):
     
     @jwt_required
     def get(self, id):
-        
         """ Returns a specific Recipe identified by its id. """
         user_id = get_jwt_identity()
         response = Recipes.query.filter_by(
@@ -96,7 +95,6 @@ class Recipe(Resource):
     @api.response(404, 'Recipe does not exit')
     @api.response(403, 'Forbidden, You dont own this Recipe')
     def put(self, id):
-        
         """ Updates a Recipe. """
     
         data = request.json

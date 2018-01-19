@@ -1,22 +1,31 @@
 from flask_restplus import fields, Resource
-from ..restplus import api
+from app.api.restplus import api
 
 
 """ this file is for data validation """
 
 recipes = api.model('Recipe', {
-    'id': fields.Integer(readOnly=True, description='recipe unique identifier'),
-    'name': fields.String(required=True, description='recipe name'),
-    'description': fields.String(required=True, description='A brief description of the recipes'),
-    'created': fields.DateTime(readOnly=True, description = 'Date created'),
-    'modified': fields.DateTime(readOnnly=True, description = 'date modified'),
-    'category_id': fields.Integer(readOnly = True, description = 'category recipe belongs to'),
-    'user_id': fields.Integer(readOnly = True, description = 'User that made recipe')
+    'id': fields.Integer(readOnly=True,
+           description='recipe unique identifier'),
+    'name': fields.String(required=True, 
+           description='recipe name'),
+    'description': fields.String(required=True, 
+           description='A brief description of the recipes'),
+    'created': fields.DateTime(readOnly=True,
+           description = 'Date created'),
+    'modified': fields.DateTime(readOnnly=True,
+           description = 'date modified'),
+    'category_id': fields.Integer(readOnly = True, 
+           description = 'category recipe belongs to'),
+    'user_id': fields.Integer(readOnly = True,
+           description = 'User that made recipe')
 })
 
 edit_recipe = api.model('Edit Recipe',{
-    'name': fields.String(required=False, description='Category name'),
-    'description': fields.String(required = False, description = 'A brief description of the category')
+    'name': fields.String(required=False,
+          description='Category name'),
+    'description': fields.String(required = False,
+         description = 'A brief description of the category')
 })
 
 pagination = api.model('A page of results', {
@@ -31,17 +40,21 @@ recipe_collection = api.inherit('Recipes Collection', pagination, {
 
 
 category = api.model('Recipe Category', {
-    'id': fields.Integer(readOnly=True, description='Unqiue category Id for Identity purposes'),
+    'id': fields.Integer(readOnly=True,
+         description='Unqiue category Id for Identity purposes'),
     'name': fields.String(required=True, description='Category name'),
-    'description': fields.String(required = True, description = 'A brief description of the category'),
+    'description': fields.String(required = True,
+         description = 'A brief description of the category'),
     'created': fields.DateTime(readOnly=True, description = 'Date created'),
     'modified': fields.DateTime(readOnnly=True, description = 'date modified'),
-    'user_id': fields.Integer(readOnly = True, description='User that made the category')
+    'user_id': fields.Integer(readOnly = True,
+         description='User that made the category')
 })
 
 edit_category = api.model('Edit category',{
     'name': fields.String(required=False, description='Category name'),
-    'description': fields.String(required = False, description = 'A brief description of the category')
+    'description': fields.String(required = False,
+          description = 'A brief description of the category')
 })
 
 category_collection = api.inherit('Categories collection', pagination, {
@@ -63,7 +76,8 @@ users = api.model('User', {
 
 
 usr = api.model('user log in', {
-    'username': fields.String(required = True, description = 'User unique name on the app'),
+    'username': fields.String(required = True,
+          description = 'User unique name on the app'),
     'password':fields.String(required = True, description = 'User email') 
 })
 
