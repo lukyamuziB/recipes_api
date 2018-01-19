@@ -8,8 +8,7 @@ from app.api.utilities import (create_category,
       delete_category, update_category)
 from app.api.serializers import (category,
      category_with_recipes, category_collection,
-     edit_category
-)
+     edit_category)
 from app.api.parsers import pagination_args 
 from app.api.restplus import api
 from app.models import Categories
@@ -132,4 +131,3 @@ class CategoryItem(Resource):
         except YouDontOwnResource as e:
             return make_response(jsonify(
                    {'Error': "Can't delete a recipe a you did not create"}),403)
-
