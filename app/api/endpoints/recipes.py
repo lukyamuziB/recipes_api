@@ -98,8 +98,9 @@ class Recipe(Resource):
         """ Updates a Recipe. """
     
         data = request.json
+        user_id = get_jwt_identity()
         try:
-            update_recipe(id, data)
+            update_recipe(id, data, user_id)
             return make_response(jsonify(
                    {"Message": "Recipe successfully updated"}), 204)
         except NoResultFound:

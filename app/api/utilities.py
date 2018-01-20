@@ -83,10 +83,10 @@ def create_recipe(data, category_id, usr_id):
         raise ResourceAlreadyExists
 
 
-def update_recipe(recipe_id, data):
+def update_recipe(recipe_id, data, user_id):
     """ updates a recipe if it exists """
-    recipe = Recipes.query.filter(Recipes.id == recipe_id).first()
-    if recipe is None:
+    if Recipes.query.filter_by(id = recipe_id,
+                    user_id = user_id).first() is None:
         raise NoResultFound
     else:    
         name = data.get('name')
@@ -99,9 +99,8 @@ def update_recipe(recipe_id, data):
 
 def delete_recipe(recipe_id, user_id):
     """ deletes a recipe if it exists """
-    recipe = Recipes.query.filter_by(id = recipe_id,
-                          user_id = user_id).first()
-    if recipe is None:
+
+    if Recipes.query.filter(Recipes.id == recipe_id).first() is None:
         raise NoResultFound  
     else:
         db.session.delete(recipe)
@@ -121,9 +120,10 @@ def create_category(data, user_id):
         raise ResourceAlreadyExists
 
 
-def update_category(category_id, data):
+def update_category(category_id, data, user_id):
     """ updates a category a user made """
-    category = Categories.query.filter_by(id = category_id).first()
+    category = Categories.query.filter_by(id = category_id, 
+                user_id = user_id).first()
     if category is None:
         raise NoResultFound
     else:

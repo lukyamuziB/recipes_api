@@ -97,9 +97,9 @@ class CategoryItem(Resource):
         * Specify the ID of the category to modify in the request URL path.
         """
         data = request.json
-        a = get_jwt_identity()
+        user_id = get_jwt_identity()
         try:
-            update_category(id, data)
+            update_category(id, data, user_id)
             return make_response(jsonify(
                    {"Message": "Category successfully updated"}), 200)
         except NoResultFound as e:
