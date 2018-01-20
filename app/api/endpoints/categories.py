@@ -8,7 +8,7 @@ from app.api.utilities import (create_category,
       delete_category, update_category)
 from app.api.serializers import (category,
      category_with_recipes, category_collection,
-     edit_category)
+     edit_resource)
 from app.api.parsers import pagination_args 
 from app.api.restplus import api
 from app.models import Categories
@@ -86,7 +86,7 @@ class CategoryItem(Resource):
         return marshal(response, category_with_recipes)
 
 
-    @api.expect(edit_category)
+    @api.expect(edit_resource)
     @jwt_required
     @api.response(204, 'Category successfully updated.')
     @api.response(404, "Not Found, Category doesn't exist")

@@ -30,27 +30,37 @@ def belongs_to_user():
     return usr_id
 
 
-def check_category_exists(category, user_id):
-    ctg = Categories.query.filter_by(
-           user_id = user_id, name = category).first()
-    if ctg:
-        return False
-    return True
-
-
-def check_recipe_exists(recipe, user_id):
-    rcp = Recipes.query.filter_by(
-          name = recipe, user_id = user_id).first()
-    if rcp:
-        return False
-    return True
-
-
 def check_user_exists(username, email):
     if User.query.filter_by(username = username).first() or \
     User.query.filter_by(email = email).first():
         return False
     return True
+
+
+def sanitize_edit_name(resource_instance, name):
+    """takes in a name and makes sure its sanitized to catch ivalid 
+       and empty inputs
+    """
+    if name is not None:
+        if len(name) == 0:
+            raise EmptyField
+        else:
+            resource_instance.name = name
+    else:
+         resource_instance.name = resource_instance.name
+    
+
+def sanitize_edit_description(resource_instance, description):
+    """ takes in a description and makes sure its sanitized to catch invalid
+        and empty inputs
+    """
+    if description is not None:
+        if len(description) == 0:
+            raise EmptyDescription
+        else: 
+            resource_instance.description = description
+    else:
+        resource_instance.description = resource_instance.description
 
 
 def create_recipe(data, category_id, usr_id):
@@ -65,7 +75,7 @@ def create_recipe(data, category_id, usr_id):
     if category is None:
         raise NoResultFound
     user = User.query.filter_by(id = usr_id).first()
-    if check_recipe_exists(name, usr_id):
+    if not Recipes.query.filter_by(name = name, user_id = usr_id).first():
          recipe = Recipes(name = name, description = description,
          category = category, user = user)
          save(recipe)
@@ -81,20 +91,8 @@ def update_recipe(recipe_id, data):
     else:    
         name = data.get('name')
         description = data.get('description')
-        if name is not None:
-            if len(name) == 0:
-                raise EmptyField
-            else:
-                recipe.name = name
-        else:
-             recipe.name = recipe.name
-        if description is not None:
-            if len(description) == 0:
-                raise EmptyDescription
-            else:
-                recipe.description = description
-        else:
-            recipe.description = recipe.description
+        sanitize_edit_name(recipe, name)
+        sanitize_edit_description(recipe, description)
         recipe.modified = datetime.now()
         db.session.commit()
 
@@ -115,7 +113,7 @@ def create_category(data, user_id):
     name = data.get('name')
     description = data.get('description')
     user = User.query.filter_by(id = user_id).first()
-    if check_category_exists(name, user_id):
+    if not Categories.query.filter_by(name = name, user_id = user_id).first():
         category = Categories(name = name, 
         description = description, user = user)
         save(category)
@@ -131,20 +129,8 @@ def update_category(category_id, data):
     else:
         description = data.get('description')
         name = data.get('name')
-        if name is not None:
-            if len(name) == 0:
-                raise EmptyField
-            else:
-                category.name = name
-        else:
-            category.name = category.name
-        if description is not None:
-            if len(description) == 0:
-                raise EmptyDescription
-            else: 
-                category.description = description
-        else:
-            category.description = category.description
+        sanitize_edit_name(category, name)
+        sanitize_edit_description(category, description)
         category.modified = datetime.now()
         db.session.commit()
 
@@ -182,7 +168,6 @@ def register_user(data):
     else:
         if not validate_email(email):
             raise EmailFormatError
-    
     if check_user_exists(username, email):
         user = User(name = name, username = username,
                 email = email, password = password )

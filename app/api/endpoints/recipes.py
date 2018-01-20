@@ -10,7 +10,7 @@ from app.exceptions import ResourceAlreadyExists, YouDontOwnResource
 from app.api.utilities import (create_recipe, 
                                 update_recipe, delete_recipe)
 from app.api.serializers import (recipes,
-    recipe_collection, edit_recipe)
+    recipe_collection, edit_resource)
 from app.api.parsers import pagination_args
 from app.api.restplus import api
 from app.models import Recipes
@@ -89,7 +89,7 @@ class Recipe(Resource):
                     coresponding to the id you provided"}), 400)
         return marshal(response, recipes)
     
-    @api.expect(edit_recipe)
+    @api.expect(edit_resource)
     @jwt_required
     @api.response(204, 'Recipe successfully updated.')
     @api.response(404, 'Recipe does not exit')

@@ -21,7 +21,7 @@ recipes = api.model('Recipe', {
            description = 'User that made recipe')
 })
 
-edit_recipe = api.model('Edit Recipe',{
+edit_resource = api.model('Edit Recipe',{
     'name': fields.String(required=False,
           description='Category name'),
     'description': fields.String(required = False,
@@ -51,11 +51,6 @@ category = api.model('Recipe Category', {
          description='User that made the category')
 })
 
-edit_category = api.model('Edit category',{
-    'name': fields.String(required=False, description='Category name'),
-    'description': fields.String(required = False,
-          description = 'A brief description of the category')
-})
 
 category_collection = api.inherit('Categories collection', pagination, {
     'items': fields.List(fields.Nested(category))
