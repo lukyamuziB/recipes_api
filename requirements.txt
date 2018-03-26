@@ -11,6 +11,7 @@ coverage==4.0.3
 decorator==4.1.2
 execnet==1.5.0
 Flask==0.12.2
+Flask-Cors==3.0.3
 Flask-JWT-Extended==3.4.0
 Flask-Mail==0.9.1
 Flask-Migrate==2.1.1
@@ -19,6 +20,7 @@ Flask-Script==2.0.6
 Flask-SQLAlchemy==2.3.2
 Flask-Testing==0.7.1
 ForgeryPy==0.1
+gunicorn==19.7.1
 idna==2.6
 ipdb==0.10.3
 ipython==6.2.1

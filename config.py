@@ -1,16 +1,21 @@
-
+import os
 class Config:
-    SECRET_KEY = "d89ryr0989gygVSDGVGYGVGYGAV7W89hgshjvs"
+    # SECRET_KEY = "d89ryr0989gygVSDGVGYGVGYGAV7W89hgshjvs"
     SQLALCHEMY_COMMIT_ON_TEARDOWN = True
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     JWT_BLACKLIST_ENABLED = True
     JWT_BLACKLIST_TOKEN_ACCESS = ['access']
+    SECRET_KEY = os.environ['SECRET_KEY']
+    if os.environ.get('DATABASE_URL') is None:
+        SQLALCHEMY_DATABASE_URI = 'postgresql://localhost/api'
+    else:
+        SQLALCHEMY_DATABASE_URI = os.environ['DATABASE_URL']
     
 
 class DevelopmentConfig(Config):
     RESTPLUS_VALIDATE = True
     DEBUG = True
-    SQLALCHEMY_DATABASE_URI = "postgresql://localhost/api"
+    #  SQLALCHEMY_DATABASE_URI = "postgresql://localhost/api"
 
 
 class TestingConfig(Config):

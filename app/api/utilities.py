@@ -15,7 +15,8 @@ from app.exceptions import (
     ResourceAlreadyExists, YouDontOwnResource,
     EmailEmpty, PasswordEmpty, UsernameEmpty, NameEmpty,
     EmptyField, EmptyDescription, WrongPassword,
-    PasswordFormatError, EmailFormatError, UsernameFormatError
+    PasswordFormatError, EmailFormatError, UsernameFormatError,
+    RecipeAlreadyNamed, CategoryAlreadyNamed
    )
 
 
@@ -30,22 +31,6 @@ def belongs_to_user():
     return usr_id
 
 
-def check_category_exists(category, user_id):
-    ctg = Categories.query.filter_by(
-           user_id = user_id, name = category).first()
-    if ctg:
-        return False
-    return True
-
-
-def check_recipe_exists(recipe, user_id):
-    rcp = Recipes.query.filter_by(
-          name = recipe, user_id = user_id).first()
-    if rcp:
-        return False
-    return True
-
-
 def check_user_exists(username, email):
     if User.query.filter_by(username = username).first() or \
     User.query.filter_by(email = email).first():
@@ -53,19 +38,45 @@ def check_user_exists(username, email):
     return True
 
 
+def sanitize_edit_name(resource_instance, name):
+    """takes in a name and makes sure its sanitized to catch ivalid 
+       and empty inputs
+    """
+    if name is not None:
+        if len(name) == 0:
+            raise EmptyField
+        else:
+            resource_instance.name = name
+    else:
+         resource_instance.name = resource_instance.name
+    
+
+def sanitize_edit_description(resource_instance, description):
+    """ takes in a description and makes sure its sanitized to catch invalid
+        and empty inputs
+    """
+    if description is not None:
+        if len(description) == 0:
+            raise EmptyDescription
+        else: 
+            resource_instance.description = description
+    else:
+        resource_instance.description = resource_instance.description
+
+
 def create_recipe(data, category_id, usr_id):
-    """creates a recipe if doesn't exisr exists
+    """creates a recipe if doesn't exis exists
        will throw a NoResult exception if the category you choose
        does not exist
     """
-    name = data.get('name')
-    description = data.get('description')
+    name = data.get("name")
+    description = data.get("description")
     category = Categories.query.filter_by(
         id =category_id, user_id = usr_id).first()
     if category is None:
         raise NoResultFound
     user = User.query.filter_by(id = usr_id).first()
-    if check_recipe_exists(name, usr_id):
+    if not Recipes.query.filter_by(name = name, user_id = usr_id).first():
          recipe = Recipes(name = name, description = description,
          category = category, user = user)
          save(recipe)
@@ -73,39 +84,33 @@ def create_recipe(data, category_id, usr_id):
         raise ResourceAlreadyExists
 
 
-def update_recipe(recipe_id, data):
+def update_recipe(recipe_id, data, user_id):
     """ updates a recipe if it exists """
-    recipe = Recipes.query.filter(Recipes.id == recipe_id).first()
-    if recipe is None:
+    if Recipes.query.filter_by(id = recipe_id,
+                    user_id = user_id).first() is None:
         raise NoResultFound
-    else:    
+    else: 
+        recipe =  Recipes.query.filter_by(id = recipe_id,
+                    user_id = user_id).first()  
         name = data.get('name')
         description = data.get('description')
-        if name is not None:
-            if len(name) == 0:
-                raise EmptyField
-            else:
-                recipe.name = name
+        if Recipes.query.filter_by(name = name,
+                    user_id = user_id).first():
+            raise RecipeAlreadyNamed
         else:
-             recipe.name = recipe.name
-        if description is not None:
-            if len(description) == 0:
-                raise EmptyDescription
-            else:
-                recipe.description = description
-        else:
-            recipe.description = recipe.description
-        recipe.modified = datetime.now()
-        db.session.commit()
+            sanitize_edit_name(recipe, name)
+            sanitize_edit_description(recipe, description)
+            recipe.modified = datetime.now()
+            db.session.commit()
 
 
 def delete_recipe(recipe_id, user_id):
     """ deletes a recipe if it exists """
-    recipe = Recipes.query.filter_by(id = recipe_id,
-                          user_id = user_id).first()
-    if recipe is None:
+
+    if Recipes.query.filter(Recipes.id == recipe_id).first() is None:
         raise NoResultFound  
     else:
+        recipe = Recipes.query.filter(Recipes.id == recipe_id).first()
         db.session.delete(recipe)
         db.session.commit()
 
@@ -115,7 +120,7 @@ def create_category(data, user_id):
     name = data.get('name')
     description = data.get('description')
     user = User.query.filter_by(id = user_id).first()
-    if check_category_exists(name, user_id):
+    if not Categories.query.filter_by(name = name, user_id = user_id).first():
         category = Categories(name = name, 
         description = description, user = user)
         save(category)
@@ -123,30 +128,23 @@ def create_category(data, user_id):
         raise ResourceAlreadyExists
 
 
-def update_category(category_id, data):
+def update_category(category_id, data, user_id):
     """ updates a category a user made """
-    category = Categories.query.filter_by(id = category_id).first()
+    category = Categories.query.filter_by(id = category_id, 
+                user_id = user_id).first()
     if category is None:
         raise NoResultFound
     else:
         description = data.get('description')
         name = data.get('name')
-        if name is not None:
-            if len(name) == 0:
-                raise EmptyField
-            else:
-                category.name = name
+        if Categories.query.filter_by(name = name, 
+                user_id = user_id).first():
+            raise CategoryAlreadyNamed
         else:
-            category.name = category.name
-        if description is not None:
-            if len(description) == 0:
-                raise EmptyDescription
-            else: 
-                category.description = description
-        else:
-            category.description = category.description
-        category.modified = datetime.now()
-        db.session.commit()
+            sanitize_edit_name(category, name)
+            sanitize_edit_description(category, description)
+            category.modified = datetime.now()
+            db.session.commit()
 
 
 def delete_category(category_id, user_id):
@@ -182,7 +180,6 @@ def register_user(data):
     else:
         if not validate_email(email):
             raise EmailFormatError
-    
     if check_user_exists(username, email):
         user = User(name = name, username = username,
                 email = email, password = password )
@@ -219,7 +216,7 @@ def user_logout():
     blacklist = Blacklist(token = jti)
     db.session.add(blacklist)
     db.session.commit()
-
+ 
 
 def reset_password(data, id):
     """ resets a user's password """
