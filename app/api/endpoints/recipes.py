@@ -4,9 +4,11 @@ from flask_restplus import Resource, marshal
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy import func
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from app.exceptions import ResourceAlreadyExists, YouDontOwnResource
+
 
 #local imports
+from app.exceptions import (ResourceAlreadyExists, YouDontOwnResource,
+ RecipeAlreadyNamed, EmptyDescription, EmptyField)
 from app.api.utilities import (create_recipe, 
                                 update_recipe, delete_recipe)
 from app.api.serializers import (recipes,
@@ -60,7 +62,7 @@ class RecipesCollection(Resource):
         """ Creates a Recipe """
         data = request.json
         usr_id = get_jwt_identity()
-        ctg_id = data.get('category_id')
+        ctg_id = data.get("category_id")
         try:
             create_recipe(data, ctg_id, usr_id)
             return make_response(jsonify(
@@ -91,7 +93,7 @@ class Recipe(Resource):
     
     @api.expect(edit_resource)
     @jwt_required
-    @api.response(204, 'Recipe successfully updated.')
+    @api.response(200, 'Recipe successfully updated.')
     @api.response(404, 'Recipe does not exit')
     @api.response(403, 'Forbidden, You dont own this Recipe')
     def put(self, id):
@@ -102,13 +104,19 @@ class Recipe(Resource):
         try:
             update_recipe(id, data, user_id)
             return make_response(jsonify(
-                   {"Message": "Recipe successfully updated"}), 204)
+                   {"Message": "Recipe successfully updated"}), 200)
         except NoResultFound:
             return make_response(jsonify(
                    {"Error": "Can't edit non existent recipe"}),404)
-        except YouDontOwnResource:
+        except EmptyField:
             return make_response(jsonify(
-                   {"Error": "Can't edit a recipe you didnt create"}),403)
+                   {"Error": "Recipe name field cant be left empty"}),403)
+        except EmptyDescription:
+            return make_response(jsonify(
+            {"Error": "Recipe description field cant be left empty"}),400)
+        except RecipeAlreadyNamed:
+            return make_response(jsonify(
+                    {"Error": "You already have a recipe named like this"}),403)
 
 
     @jwt_required

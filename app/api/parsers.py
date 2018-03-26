@@ -10,5 +10,5 @@ pagination_args.add_argument('page', type=int, required=False,
 
 
 pagination_args.add_argument('per_page', type=int, required=False,
- location = 'args', choices=[2, 10, 20, 30, 40, 50],
-                    default=10, help='Results per page {error_msg}')
+ location = 'args', choices=[2,6, 10, 20, 30, 40, 50],
+                    default=6, help='Results per page {error_msg}')

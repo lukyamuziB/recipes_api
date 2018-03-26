@@ -36,3 +36,12 @@ class PasswordFormatError(Exception):
 
 class EmailFormatError(Exception):
     pass 
+
+class RecipeAlreadyNamed(Exception):
+    pass 
+
+class CategoryAlreadyNamed(Exception):
+    pass 
+
+
+    

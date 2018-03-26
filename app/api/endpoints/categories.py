@@ -3,7 +3,8 @@ from flask_restplus import Resource, marshal
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from sqlalchemy.orm.exc import NoResultFound
 
-from app.exceptions import ResourceAlreadyExists, EmptyField, EmptyDescription
+from app.exceptions import (ResourceAlreadyExists, EmptyField,
+                  EmptyDescription, CategoryAlreadyNamed)
 from app.api.utilities import (create_category,
       delete_category, update_category)
 from app.api.serializers import (category,
@@ -30,24 +31,38 @@ class CategoryCollection(Resource):
         args = pagination_args.parse_args(request)
         query = args.get('q')
         page = args.get('page', 1)
-        per_page = args.get('per_page', 10)
+        per_page = args.get('per_page', 6)
         user_id = get_jwt_identity()
 
 
         if query is None:
             category_query = Categories.query.filter_by(user_id = user_id)
+            categories_page = category_query.paginate(page, per_page,
+                    error_out = False)
+            if not categories_page.items:
+                return make_response(jsonify(
+            {"Error":f"This page doesn't have any categories yet"}))
+            else:
+                return marshal(categories_page, category_collection)
         else:
             category_query = Categories.query.filter(
                 Categories.name.ilike("%"+query+"%"), Categories.user_id == user_id)
+            categories_page = category_query.paginate(page, per_page=1000000,
+                  error_out = False)
+            if not categories_page.items:
+                return make_response(jsonify(
+            {"Error":"No Categories match this search query"}))
+            else:
+                print("I got here")
+                return marshal(categories_page, category_collection)
 
-        categories_page = category_query.paginate(page, per_page,
-                    error_out = False)
+                    
         
-        if not categories_page.items:
-            return make_response(jsonify(
-        {"Error":f"This page doesn't have any categories yet"}))
-        else:
-            return marshal(categories_page, category_collection)
+        # if not categories_page.items:
+        #     return make_response(jsonify(
+        # {"Error":f"This page doesn't have any categories yet"}))
+        # else:
+        #     return marshal(categories_page, category_collection)
 
     @api.response(201, 'Category successfully created.')
     @api.response(409, 'Conflict, Category already exists')
@@ -111,6 +126,9 @@ class CategoryItem(Resource):
         except EmptyDescription:
             return make_response(jsonify(
             {"Error": "Category description field cant be left empty"}),400)
+        except CategoryAlreadyNamed:
+            return make_response(jsonify(
+            {"Error": "Sorry, you already have a category name like"}),400)
 
 
     @api.response(200, 'Category successfully deleted.')

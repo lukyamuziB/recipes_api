@@ -1,3 +1,4 @@
+
 from flask import Flask, Blueprint
 from flask_sqlalchemy import SQLAlchemy
 from config import config
@@ -12,7 +13,7 @@ jwt = JWTManager()
 
 def create_app(config_name):
     app = Flask(__name__)
-    app.config.from_object(config_name)
+    app.config.from_object(config[config_name])
     jwt.init_app(app)
 
     db.init_app(app)

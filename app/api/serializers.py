@@ -35,6 +35,7 @@ pagination = api.model('A page of results', {
     'total': fields.Integer(description='Total number of results'),
 })
 
+
 recipe_collection = api.inherit('Recipes Collection', pagination, {
     'items': fields.List(fields.Nested(recipes))})
 
